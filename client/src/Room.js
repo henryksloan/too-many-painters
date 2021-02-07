@@ -8,6 +8,8 @@ const Room = props => {
 
   useEffect(() => {
     props.socket.emit("join_room", roomId);
+
+    return () => { props.socket.emit("leave_room") };
   }, [props.socket, roomId]);
 
   return (

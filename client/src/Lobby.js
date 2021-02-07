@@ -7,21 +7,32 @@ const Lobby = props => {
   let [users, setUsers] = useState([]);
 
   useEffect(() => {
-    props.socket.on("new_player", (room) => {
+    let gameStarting = false;
+    let isRendered = true;
+
+    props.socket.on("players_changed", (room) => {
       console.log(room);
-      setUsers(room.users);
+      if (isRendered) setUsers(room.users);
     });
 
     props.socket.on("initialize", (room) => {
       console.log(room);
-      setUsers(room.users);
+      if (isRendered) setUsers(room.users);
     });
 
     props.socket.on("room_started", (room) => {
+      gameStarting = true;
+      console.log("Starting");
       history.push(`/room/${roomId}`);
     });
 
     props.socket.emit("join_room", roomId);
+
+    return () => {
+      isRendered = false;
+      console.log("Leaving " + gameStarting);
+      if (!gameStarting) props.socket.emit("leave_room");
+    }
   }, [roomId, props.socket, history]);
   
   const userList = users.map((user) => <li key={ user }>{ user }</li>);

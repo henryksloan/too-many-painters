@@ -39,6 +39,7 @@ io.on('connection', (socket) => {
     if (user_rooms[socket.id]) {
       const index = rooms[user_rooms[socket.id]].users.indexOf(socket.id);
       rooms[user_rooms[socket.id]].users.splice(index, 1);
+      socket.to(user_rooms[socket.id]).emit('players_changed', rooms[user_rooms[socket.id]]);
       if (rooms[user_rooms[socket.id]].users.length === 0) {
         delete rooms[user_rooms[socket.id]];
       }
@@ -63,7 +64,20 @@ io.on('connection', (socket) => {
     user_rooms[socket.id] = room;
     socket.emit('initialize', { users: rooms[room].users,
       lines: rooms[room].lines });
-    socket.to(room).emit('new_player', rooms[room]);
+    socket.to(room).emit('players_changed', rooms[room]);
+  });
+
+  socket.on('leave_room', () => {
+    if (user_rooms[socket.id]) {
+      console.log(`${socket.id} leaving room ${user_rooms[socket.id]}`);
+      const index = rooms[user_rooms[socket.id]].users.indexOf(socket.id);
+      rooms[user_rooms[socket.id]].users.splice(index, 1);
+      socket.to(user_rooms[socket.id]).emit('players_changed', rooms[user_rooms[socket.id]]);
+      if (rooms[user_rooms[socket.id]].users.length === 0) {
+        delete rooms[user_rooms[socket.id]];
+      }
+      delete user_rooms[socket.id];
+    }
   });
 
   socket.on('start_room', () => {
@@ -78,7 +92,7 @@ io.on('connection', (socket) => {
 
   socket.on('draw', (coords) => {
     const room = user_rooms[socket.id];
-    if (room) { // && rooms[room].started) {
+    if (room && rooms[room].started) {
       socket.to(room).emit('draw', coords);
       rooms[room].lines.push(coords);
     }
