@@ -1,24 +1,41 @@
-import logo from './logo.svg';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+} from "react-router-dom";
+
 import './App.css';
+import Lobby from './Lobby';
+import Room from './Room';
+import Home from './Home';
+
+import socketIOClient from "socket.io-client";
+const ENDPOINT = "http://localhost:3001";
+const socket = socketIOClient(ENDPOINT);
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <header className="App-header">
+          <Link to="/">Too Many Painters</Link>
+        </header>
+
+        <Switch>
+          <Route path='/room/:roomId'>
+            <Room socket={ socket } />
+          </Route>
+          <Route path='/lobby/:roomId'>
+            <Lobby socket={ socket } />
+          </Route>
+          <Route path='/'>
+            <Home socket={ socket } />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
