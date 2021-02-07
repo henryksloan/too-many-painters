@@ -3,12 +3,12 @@ const app = express();
 const http = require('http').Server(app);
 const io = require("socket.io")(http, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "http://localhost:5000",
     methods: ["GET", "POST"]
   }
 });
 
-const port = 3001;
+const port = process.env.PORT || 5000;
 
 const path = require('path');
 app.use(express.static(path.join(__dirname, 'client/build')));

@@ -12,7 +12,7 @@ import Room from './Room';
 import Home from './Home';
 
 import socketIOClient from "socket.io-client";
-const ENDPOINT = "http://localhost:3001";
+const ENDPOINT = '/';
 const socket = socketIOClient(ENDPOINT);
 
 function App() {
