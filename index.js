@@ -1,4 +1,5 @@
-const app = require("express")();
+const express = require("express");
+const app = express();
 const http = require('http').Server(app);
 const io = require("socket.io")(http, {
   cors: {
@@ -9,8 +10,10 @@ const io = require("socket.io")(http, {
 
 const port = 3001;
 
-app.get('/', (req, res) => {
-  res.send("Hello, world").status(200);
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'client/build')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build/index.html'));
 });
 
 const idLength = 12;
