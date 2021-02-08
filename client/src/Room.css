@@ -1,0 +1,24 @@
+canvas {
+  border: 3px solid black;
+}
+
+.game-area {
+  display: inline-flex;
+  flex-direction: row;
+}
+
+.draw-area {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.painter-list {
+  width: 250px;
+  text-align: left;
+}
+
+.guesser-area {
+  margin-left: 8px;
+  width: 250px;
+  text-align: left;
+}

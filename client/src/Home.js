@@ -8,6 +8,8 @@ const Lobby = props => {
     props.socket.on("room_created", (id) => {
       history.push(`/lobby/${id}`);
     });
+
+    return () => { props.socket.removeAllListeners() };
   }, [history, props.socket]);
 
   

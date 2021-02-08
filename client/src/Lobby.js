@@ -31,6 +31,7 @@ const Lobby = props => {
       isRendered = false;
       console.log("Leaving " + gameStarting);
       if (!gameStarting) props.socket.emit("leave_room");
+      props.socket.removeAllListeners();
     }
   }, [roomId, props.socket, history]);
   

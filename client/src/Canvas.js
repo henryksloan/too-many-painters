@@ -26,7 +26,6 @@ function useCanvas() {
   return canvasRef;
 }
 
-// const Canvas = props => {
 const Canvas = forwardRef((props, ref) => {
   const canvasRef = useCanvas();
   let [inkAmount, setInkAmount] = useState(35);
@@ -38,7 +37,33 @@ const Canvas = forwardRef((props, ref) => {
     setInk(inkAmount, color) {
       setInkAmount(inkAmount);
       canvasRef.current.getContext('2d').strokeStyle = color;
-    }
+    },
+
+    clearScreen(color) {
+      const context = canvasRef.current.getContext('2d');
+      context.fillStyle = color || '#FFFFFF';
+      context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+    },
+
+    drawNumber(number) {
+      // https://stackoverflow.com/a/29912925/7401492
+      let ctx = canvasRef.current.getContext('2d'),
+          dashLen = 220, dashOffset = dashLen, speed = 9,
+          txt = number.toString(), i = 0;
+      let oldStrokeStyle = ctx.strokeStyle.slice();
+      let x = ctx.canvas.width / 2, y = ctx.canvas.height / 2;
+      ctx.font = "50px Comic Sans MS, cursive, TSCu_Comic, sans-serif"; 
+      
+      (function loop() {
+        ctx.fillRect(x, y - 90, 60, 150);
+        ctx.setLineDash([dashLen - dashOffset, dashOffset - speed]);
+        dashOffset -= speed;
+        ctx.strokeStyle = "#1f2f90";
+        ctx.strokeText(txt[i], x, y);
+        ctx.strokeStyle = oldStrokeStyle;
+        if (dashOffset > 0) requestAnimationFrame(loop);
+      })();
+    },
   }));
 
   const mouseMove = (e) => {
@@ -114,6 +139,8 @@ const Canvas = forwardRef((props, ref) => {
       var mouseEvent = new MouseEvent("mouseup", {});
       canvas.dispatchEvent(mouseEvent);
     });
+
+    return () => { props.socket.removeAllListeners() };
   }, [canvasRef, props.socket]);
   
   return (

@@ -1,3 +1,5 @@
+import './Room.css';
+
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -8,8 +10,21 @@ const Room = props => {
   let canvasRef = useRef();
   let [users, setUsers] = useState([]);
   let [painter, setPainter] = useState(null);
+  let [paintOrder, setPaintOrder] = useState([]);
   let [guesser, setGuesser] = useState(null);
   let [myTurn, setMyTurn] = useState(false);
+  let [drawTimer, setDrawTimer] = useState(0);
+
+  async function roundCountdown() {
+    if (!canvasRef.current) return;
+    canvasRef.current.clearScreen('#EEEEEE');
+    for (let i = 3; i > 0; i--) {
+      if (!canvasRef.current) return;
+      canvasRef.current.drawNumber(i);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    if (canvasRef.current) canvasRef.current.clearScreen();
+  }
 
   useEffect(() => {
     props.socket.on("players_changed", (room) => {
@@ -26,11 +41,14 @@ const Room = props => {
       setGuesser(room.guesser);
     });
 
-    props.socket.on('round_started', guesser => {
-      console.log("Guesser:", guesser);
-      setGuesser(guesser);
+    props.socket.on('round_started', data => {
+      console.log("Guesser:", data.guesser);
+      // TODO: Draw paint order correctly
+      setGuesser(data.guesser);
       setPainter(null);
-      // TODO: Clear screen, start countdown
+      setPaintOrder(data.paint_order);
+      setMyTurn(false);
+      roundCountdown();
     });
 
     props.socket.on('start_draw', data => {
@@ -39,6 +57,7 @@ const Room = props => {
       setPainter(_painter);
       canvasRef.current.setInk(inkAmount, color);
       setMyTurn(false);
+      setDrawTimer(5);
     });
 
     props.socket.on('your_turn', () => {
@@ -49,9 +68,26 @@ const Room = props => {
     props.socket.emit('join_room', roomId);
     props.socket.emit('initialize');
 
-    return () => { props.socket.emit('leave_room') };
+    return () => {
+      props.socket.emit('leave_room');
+      props.socket.removeAllListeners();
+    };
   }, [props.socket, roomId]);
 
+  useEffect(() => {
+    if (drawTimer <= 0) return;
+    const interval = setInterval(() => setDrawTimer(timer => timer - 1), 1000);
+    return () => { clearInterval(interval) };
+  }, [drawTimer])
+
+
+  const painterList = paintOrder.map((user) => {
+    if (user === painter) {
+      return <li key={ user }><strong>{ user }</strong></li>
+    } else {
+      return <li key={ user }>{ user }</li>
+    }
+  });
   const userList = users.map((user) => {
     if (user === painter) {
       return <li key={ user }><strong>{ user }</strong></li>
@@ -61,9 +97,20 @@ const Room = props => {
       return <li key={ user }>{ user }</li>
     }
   });
+
   return (
-    <div>
-      <Canvas ref={ canvasRef } socket={ props.socket } myTurn={ myTurn } />
+    <div className="room">
+      <h3>{ myTurn ? "Turn! " : "" }{ drawTimer }</h3>
+      <div className="game-area">
+        <div className="painter-list">
+          <ol>{ painterList }</ol>
+        </div>
+        <Canvas ref={ canvasRef } socket={ props.socket } myTurn={ myTurn } />
+        <div className="guesser-area">
+          Guesser:<br />
+          <strong>{ guesser }</strong>
+        </div>
+      </div>
       <ol>{ userList }</ol>
     </div>
   );

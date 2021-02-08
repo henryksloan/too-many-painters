@@ -47,13 +47,20 @@ let rooms = {}
 let user_rooms = {};
 
 function round_start(room) {
-  io.to(room).emit('round_started', rooms[room].guesser);
+  if (!rooms[room]) return;
+
+  io.to(room).emit('round_started', {
+    guesser: rooms[room].guesser,
+    paint_order: rooms[room].paint_order
+  });
   // TODO: Round counter, limit, round times should be in the room object
   // TODO: Maybe account for latency by adding some time
   setTimeout(() => { start_draw(room) }, 3000);
 }
 
 function start_draw(room) {
+  if (!rooms[room]) return;
+
   console.log(rooms[room]);
   io.to(room).emit('start_draw', {
     painter: rooms[room].painter,
@@ -66,6 +73,8 @@ function start_draw(room) {
 }
 
 function times_up(room) {
+  if (!rooms[room]) return;
+
   rooms[room].lines = [];
 
   painter_index = rooms[room].paint_order.indexOf(rooms[room].painter);
@@ -100,6 +109,7 @@ io.on('connection', (socket) => {
     if (user_rooms[socket.id]) {
       const index = rooms[user_rooms[socket.id]].users.indexOf(socket.id);
       rooms[user_rooms[socket.id]].users.splice(index, 1);
+      // TODO: players_changed should send more limited info, including new game state (especially drawers, etc). Also, what if it interrupts a round?
       socket.to(user_rooms[socket.id]).emit('players_changed', rooms[user_rooms[socket.id]]);
       if (rooms[user_rooms[socket.id]].users.length === 0) {
         delete rooms[user_rooms[socket.id]];
