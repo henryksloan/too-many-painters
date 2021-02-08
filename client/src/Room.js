@@ -1,5 +1,7 @@
 import './Room.css';
 
+import * as workerTimers from 'worker-timers';
+
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -16,10 +18,9 @@ const Room = props => {
   let [drawTimer, setDrawTimer] = useState(0);
 
   async function roundCountdown() {
-    if (!canvasRef.current) return;
-    canvasRef.current.clearScreen('#EEEEEE');
     for (let i = 3; i > 0; i--) {
       if (!canvasRef.current) return;
+      canvasRef.current.clearScreen('#EEEEEE');
       canvasRef.current.drawNumber(i);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -76,8 +77,8 @@ const Room = props => {
 
   useEffect(() => {
     if (drawTimer <= 0) return;
-    const interval = setInterval(() => setDrawTimer(timer => timer - 1), 1000);
-    return () => { clearInterval(interval) };
+    const interval = workerTimers.setInterval(() => setDrawTimer(timer => timer - 1), 1000);
+    return () => { workerTimers.clearInterval(interval) };
   }, [drawTimer])
 
 

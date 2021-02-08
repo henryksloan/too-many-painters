@@ -112,6 +112,7 @@ io.on('connection', (socket) => {
       // TODO: players_changed should send more limited info, including new game state (especially drawers, etc). Also, what if it interrupts a round?
       socket.to(user_rooms[socket.id]).emit('players_changed', rooms[user_rooms[socket.id]]);
       if (rooms[user_rooms[socket.id]].users.length === 0) {
+        console.log(`deleting room ${user_rooms[socket.id]}`)
         delete rooms[user_rooms[socket.id]];
       }
       delete user_rooms[socket.id];
@@ -169,6 +170,7 @@ io.on('connection', (socket) => {
 
   socket.on('leave_room', () => {
     if (user_rooms[socket.id]) {
+      socket.leave(user_rooms[socket.id]);
       console.log(`${socket.id} leaving room ${user_rooms[socket.id]}`);
       const index = rooms[user_rooms[socket.id]].users.indexOf(socket.id);
       rooms[user_rooms[socket.id]].users.splice(index, 1);

@@ -1,5 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useEffect, useState } from 'react'
 
+import * as workerTimers from 'worker-timers';
+
 const pixels_per_percent = 40;
 
 function drawLine(context, coords) {
@@ -61,8 +63,10 @@ const Canvas = forwardRef((props, ref) => {
         ctx.strokeStyle = "#1f2f90";
         ctx.strokeText(txt[i], x, y);
         ctx.strokeStyle = oldStrokeStyle;
-        if (dashOffset > 0) requestAnimationFrame(loop);
+        // if (dashOffset > 0) requestAnimationFrame(loop);
+        if (dashOffset > 0) workerTimers.setTimeout(loop, 16);
       })();
+      ctx.fillRect(x, y - 90, 60, 150);
     },
   }));
 
