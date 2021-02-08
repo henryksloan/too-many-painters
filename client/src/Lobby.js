@@ -22,7 +22,6 @@ const Lobby = props => {
 
     props.socket.on("room_started", (room) => {
       gameStarting = true;
-      console.log("Starting");
       history.push(`/room/${roomId}`);
     });
 

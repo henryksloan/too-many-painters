@@ -5,3 +5,8 @@
 canvas {
   border: 3px solid black;
 }
+
+.draw-area {
+  display: inline-flex;
+  flex-direction: column;
+}
