@@ -8,6 +8,8 @@ const io = require("socket.io")(http, {
   }
 });
 
+const { createCanvas } = require('canvas');
+
 const port = process.env.PORT || 5000;
 
 const path = require('path');
@@ -43,8 +45,11 @@ function shuffle(array) {
 	return array;
 };
 
-let rooms = {}
+let rooms = {};
 let user_rooms = {};
+const ink_max = 100, ink_min = 35;
+// TODO: Should white be here as a funny eraser? Maybe make it rare and special on the frontend (like an eraser)?
+const colors = ['red', 'blue', 'green', 'black', 'cyan', 'darkred', 'darkgreen'];
 
 function round_start(room) {
   if (!rooms[room]) return;
@@ -62,11 +67,11 @@ function start_draw(room) {
   if (!rooms[room]) return;
 
   console.log(rooms[room]);
-  io.to(room).emit('start_draw', {
-    painter: rooms[room].painter,
-    inkAmount: 35, // TODO
-    color: 'red' // TODO
-  });
+  const ink_amount = Math.floor(Math.random() * ((ink_max + 1) - ink_min) + ink_min);
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  rooms[room].ink_amount = ink_amount;
+  rooms[room].color = color;
+  io.to(room).emit('start_draw', { painter: rooms[room].painter, inkAmount: ink_amount, color });
   io.to(rooms[room].painter).emit('your_turn');
 
   setTimeout(() => { times_up(room) }, 5000);
@@ -75,14 +80,14 @@ function start_draw(room) {
 function times_up(room) {
   if (!rooms[room]) return;
 
-  rooms[room].lines = [];
-
   painter_index = rooms[room].paint_order.indexOf(rooms[room].painter);
+  rooms[room].painter = null;
   if (painter_index < rooms[room].paint_order.length - 1) {
     rooms[room].painter = rooms[room].paint_order[painter_index + 1];
     start_draw(room);
   } else {
     console.log("Round end");
+    // TODO: Maybe extra guess time?
     rooms[room].lines = [];
 
     guesser_index = rooms[room].guess_order.indexOf(rooms[room].guesser);
@@ -125,6 +130,7 @@ io.on('connection', (socket) => {
       started: false, play_started: false,
       guess_order: null, guesser: null,
       paint_order: null, painter: null,
+      ink_amount: 0, color: 'red',
       users_loading: [] };
     socket.join(id);
     socket.emit('room_created', id);
@@ -167,6 +173,8 @@ io.on('connection', (socket) => {
         guesser: rooms[room_id].guesser,
         paint_order: rooms[room_id].paint_order,
         painter: rooms[room_id].painter,
+        color: rooms[room_id].color,
+        inkAmount: rooms[room_id].ink_amount,
       });
     }
   })
@@ -211,11 +219,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('draw', (coords) => {
-    // TODO: Checks for painter, and track ink amount
     const room = user_rooms[socket.id];
-    if (room && rooms[room].started) {
-      socket.to(room).emit('draw', coords);
-      rooms[room].lines.push(coords);
+    if (room && rooms[room].started && rooms[room].painter === socket.id) {
+      socket.to(room).emit('draw', { coords: coords, color: rooms[room].color });
+      rooms[room].lines.push(coords); // TODO: Lines should include color
     }
   });
 });

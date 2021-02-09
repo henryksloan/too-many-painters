@@ -36,6 +36,14 @@ canvas {
   background-size: 35px 20px, 100% 100%, 100% 100%;
 }
 
+.draw-area progress.red[value]::-webkit-progress-value { background-color: red; }
+.draw-area progress.blue[value]::-webkit-progress-value { background-color: blue; }
+.draw-area progress.green[value]::-webkit-progress-value { background-color: green; }
+.draw-area progress.black[value]::-webkit-progress-value { background-color: black; }
+.draw-area progress.cyan[value]::-webkit-progress-value { background-color: cyan; }
+.draw-area progress.darkred[value]::-webkit-progress-value { background-color: darkred; }
+.draw-area progress.darkgreen[value]::-webkit-progress-value { background-color: darkgreen; }
+
 .box {
   box-shadow: 0 0 4px 0 rgb(0 0 0 / 50%);
   border-radius: 4px;

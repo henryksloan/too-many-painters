@@ -4,7 +4,8 @@ import * as workerTimers from 'worker-timers';
 
 const pixels_per_percent = 40;
 
-function drawLine(context, coords) {
+function drawLine(context, coords, color) {
+  if (color) context.strokeStyle = color;
   // TODO: Only partially draw lines that would exceed inkAmount
   context.beginPath();
   context.moveTo(coords[0], coords[1]);
@@ -31,6 +32,7 @@ function useCanvas() {
 const Canvas = forwardRef((props, ref) => {
   const canvasRef = useCanvas();
   let [inkAmount, setInkAmount] = useState(35);
+  let [inkColor, setInkColor] = useState("");
   let [penDown, setPenDown] = useState(false);
   let [x1, setX1] = useState(0);
   let [y1, setY1] = useState(0);
@@ -38,7 +40,9 @@ const Canvas = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     setInk(inkAmount, color) {
       setInkAmount(inkAmount);
+      setInkColor(color);
       canvasRef.current.getContext('2d').strokeStyle = color;
+      // TODO: Set ink bar color
     },
 
     clearScreen(color) {
@@ -99,7 +103,7 @@ const Canvas = forwardRef((props, ref) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    props.socket.on('draw', line => drawLine(context, line));
+    props.socket.on('draw', data => drawLine(context, data.coords, data.color));
 
     props.socket.on('initialize', room => {
       for (let data of room.lines) {
@@ -152,7 +156,7 @@ const Canvas = forwardRef((props, ref) => {
       <canvas ref={canvasRef} onMouseMove={ mouseMove } width="500" height="400" />
       <div className="draw-info box">
         { props.drawTimer }
-        <progress value={ inkAmount } max="100">{ inkAmount }%</progress>
+        <progress value={ inkAmount } max="100" className={ inkColor }>{ inkAmount }%</progress>
       </div>
   </div>
   )
