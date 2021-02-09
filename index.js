@@ -71,7 +71,7 @@ function startDraw(room) {
   const color = colors[Math.floor(Math.random() * colors.length)];
   rooms[room].inkAmount = inkAmount;
   rooms[room].color = color;
-  io.to(room).emit('start_draw', { painter: rooms[room].painter, inkAmount: inkAmount, color });
+  io.to(room).emit('start_draw', { painter: rooms[room].painter, inkAmount, color });
   io.to(rooms[room].painter).emit('your_turn');
 
   setTimeout(() => { timesUp(room) }, 5000);
@@ -222,7 +222,7 @@ io.on('connection', (socket) => {
     const room = userRooms[socket.id];
     if (room && rooms[room].started && rooms[room].painter === socket.id) {
       socket.to(room).emit('draw', { coords: coords, color: rooms[room].color });
-      rooms[room].lines.push(coords); // TODO: Lines should include color
+      rooms[room].lines.push({ line: coords, color: rooms[room].color }); // TODO: Lines should include color
     }
   });
 });

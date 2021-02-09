@@ -20,7 +20,7 @@ const Lobby = props => {
       if (isRendered) setUsers(room.users);
     });
 
-    props.socket.on("room_started", (room) => {
+    props.socket.on("room_started", () => {
       gameStarting = true;
       history.push(`/room/${roomId}`);
     });

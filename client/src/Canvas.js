@@ -107,7 +107,7 @@ const Canvas = forwardRef((props, ref) => {
 
     props.socket.on('initialize', room => {
       for (let data of room.lines) {
-        drawLine(context, data);
+        drawLine(context, data.line, data.color);
       }
     });
 

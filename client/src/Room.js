@@ -47,7 +47,7 @@ const Room = props => {
       // TODO: Draw paint order correctly
       setGuesser(data.guesser);
       setPainter(null);
-      setPaintOrder(data.paint_order);
+      setPaintOrder(data.paintOrder);
       setMyTurn(false);
       roundCountdown();
     });
