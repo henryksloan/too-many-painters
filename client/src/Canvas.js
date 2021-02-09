@@ -150,8 +150,10 @@ const Canvas = forwardRef((props, ref) => {
   return (
     <div className="draw-area">
       <canvas ref={canvasRef} onMouseMove={ mouseMove } width="500" height="400" />
-      <progress value={ inkAmount } max="100">{ inkAmount }%</progress>
-      { inkAmount }%
+      <div className="draw-info box">
+        { props.drawTimer }
+        <progress value={ inkAmount } max="100">{ inkAmount }%</progress>
+      </div>
   </div>
   )
 });

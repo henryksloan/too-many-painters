@@ -121,7 +121,8 @@ io.on('connection', (socket) => {
 
   socket.on('create_room', () => {
     let id = makeID(idLength);
-    rooms[id] = { users: [], lines: [], started: false,
+    rooms[id] = { users: [], lines: [],
+      started: false, play_started: false,
       guess_order: null, guesser: null,
       paint_order: null, painter: null,
       users_loading: [] };
@@ -137,9 +138,10 @@ io.on('connection', (socket) => {
     if (user_rooms[socket.id]) {
       rooms[user_rooms[socket.id]].users_loading = rooms[user_rooms[socket.id]].users_loading.filter(x => x != socket.id);
       console.log(`${socket.id} finished loading into room ${user_rooms[socket.id]}`);
-      if (rooms[user_rooms[socket.id]].users_loading.length == 0) {
+      if (rooms[user_rooms[socket.id]].users_loading.length == 0 && !rooms[user_rooms[socket.id]].play_started) {
         // TODO: Is this a race condition that won't run if two people finish loading at the same time?
         // TODO: Make some interface for this loading on the frontend
+        rooms[user_rooms[socket.id]].play_started = true;
         round_start(user_rooms[socket.id]);
       }
       // socket.emit('rooms[user_rooms[socket.id]].users_loadingexception', {errorMessage: 'User already in a room'});
@@ -153,6 +155,7 @@ io.on('connection', (socket) => {
     socket.emit('initialize', { users: rooms[room].users,
       lines: rooms[room].lines });
     socket.to(room).emit('players_changed', rooms[room]);
+    if (rooms[room].started) socket.emit('room_started');
   });
 
   socket.on('initialize', () => {

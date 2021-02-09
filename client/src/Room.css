@@ -1,5 +1,6 @@
 canvas {
-  border: 3px solid black;
+  /* border: 3px solid black; */
+  background: white;
 }
 
 .game-area {
@@ -10,15 +11,44 @@ canvas {
 .draw-area {
   display: inline-flex;
   flex-direction: column;
+  margin: 0 8px;
+}
+
+.draw-info {
+  height: 35px;
+  margin-top: 5px;
+}
+
+.draw-area progress { 
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.draw-area progress::-webkit-progress-bar {
+  background-color: #eee;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
+}
+
+.draw-area progress[value]::-webkit-progress-value {
+  background-color: red;
+  border-radius: 6px;
+  background-size: 35px 20px, 100% 100%, 100% 100%;
+}
+
+.box {
+  box-shadow: 0 0 4px 0 rgb(0 0 0 / 50%);
+  border-radius: 4px;
+  text-align: left;
+  background-color: #fefefe;
 }
 
 .painter-list {
   width: 250px;
-  text-align: left;
+  padding: 4px;
 }
 
 .guesser-area {
-  margin-left: 8px;
   width: 250px;
-  text-align: left;
+  padding: 4px;
 }
