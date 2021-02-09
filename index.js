@@ -48,8 +48,9 @@ function shuffle(array) {
 let rooms = {};
 let userRooms = {};
 const inkMax = 100, inkMin = 35;
+const pixelsPerPercent = 10;
 // TODO: Should white be here as a funny eraser? Maybe make it rare and special on the frontend (like an eraser)?
-const colors = ['red', 'blue', 'green', 'black', 'cyan', 'darkred', 'darkgreen'];
+const colors = ['red', 'blue', 'green', 'black', 'cyan', 'darkred', 'darkgreen', 'yellow', 'orange', 'gray', 'purple', 'pink'];
 
 function roundStart(room) {
   if (!rooms[room]) return;
@@ -58,6 +59,11 @@ function roundStart(room) {
     guesser: rooms[room].guesser,
     paintOrder: rooms[room].paintOrder
   });
+
+  rooms[room].lines = [];
+  const context = rooms[room].canvas.getContext('2d');
+  context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
   // TODO: Round counter, limit, round times should be in the room object
   // TODO: Maybe account for latency by adding some time
   setTimeout(() => { startDraw(room) }, 3000);
@@ -88,8 +94,6 @@ function timesUp(room) {
   } else {
     console.log("Round end");
     // TODO: Maybe extra guess time?
-    rooms[room].lines = [];
-
     let guesserIndex = rooms[room].guessOrder.indexOf(rooms[room].guesser);
     if (guesserIndex < rooms[room].guessOrder.length - 1) {
       rooms[room].guesser = rooms[room].guessOrder[guesserIndex + 1];
@@ -115,7 +119,9 @@ io.on('connection', (socket) => {
       const index = rooms[userRooms[socket.id]].users.indexOf(socket.id);
       rooms[userRooms[socket.id]].users.splice(index, 1);
       // TODO: players_changed should send more limited info, including new game state (especially drawers, etc). Also, what if it interrupts a round?
-      socket.to(userRooms[socket.id]).emit('players_changed', rooms[userRooms[socket.id]]);
+      socket.to(userRooms[socket.id]).emit('players_changed', {
+        users: rooms[userRooms[socket.id]].users
+      });
       if (rooms[userRooms[socket.id]].users.length === 0) {
         console.log(`deleting room ${userRooms[socket.id]}`)
         delete rooms[userRooms[socket.id]];
@@ -130,7 +136,7 @@ io.on('connection', (socket) => {
       started: false, playStarted: false,
       guessOrder: null, guesser: null,
       paintOrder: null, painter: null,
-      inkAmount: 0, color: 'red',
+      canvas: createCanvas(500, 400), inkAmount: 0, color: 'red',
       usersLoading: [] };
     socket.join(id);
     socket.emit('room_created', id);
@@ -150,7 +156,6 @@ io.on('connection', (socket) => {
         rooms[userRooms[socket.id]].playStarted = true;
         roundStart(userRooms[socket.id]);
       }
-      // socket.emit('rooms[userRooms[socket.id]].usersLoadingexception', {errorMessage: 'User already in a room'});
       return;
     }
     console.log(`${socket.id} joining room ${room}`);
@@ -160,7 +165,9 @@ io.on('connection', (socket) => {
     userRooms[socket.id] = room;
     socket.emit('initialize', { users: rooms[room].users,
       lines: rooms[room].lines });
-    socket.to(room).emit('players_changed', rooms[room]);
+    socket.to(room).emit('players_changed', {
+      users: rooms[room].users
+    });
     if (rooms[room].started) socket.emit('room_started');
   });
 
@@ -186,6 +193,9 @@ io.on('connection', (socket) => {
       const index = rooms[userRooms[socket.id]].users.indexOf(socket.id);
       rooms[userRooms[socket.id]].users.splice(index, 1);
       socket.to(userRooms[socket.id]).emit('players_changed', rooms[userRooms[socket.id]]);
+      socket.to(userRooms[socket.id]).emit('players_changed', {
+        users: rooms[userRooms[socket.id]].users
+      });
       if (rooms[userRooms[socket.id]].users.length === 0) {
         console.log(`deleting room ${userRooms[socket.id]}`)
         delete rooms[userRooms[socket.id]];
@@ -199,6 +209,9 @@ io.on('connection', (socket) => {
     if (roomId
       && rooms[roomId]
       && rooms[roomId].users[0] === socket.id) {
+      if (!rooms[userRooms[socket.id]].canvas) {
+        rooms[userRooms[socket.id]].canvas = createCanvas(500, 400);
+      }
       rooms[userRooms[socket.id]].lines = [];
       rooms[userRooms[socket.id]].guessOrder =
         shuffle(rooms[userRooms[socket.id]].users.slice());
@@ -220,9 +233,34 @@ io.on('connection', (socket) => {
 
   socket.on('draw', (coords) => {
     const room = userRooms[socket.id];
-    if (room && rooms[room].started && rooms[room].painter === socket.id) {
-      socket.to(room).emit('draw', { coords: coords, color: rooms[room].color });
-      rooms[room].lines.push({ line: coords, color: rooms[room].color }); // TODO: Lines should include color
+    if (room && rooms[room].started && rooms[room].painter === socket.id && rooms[room].inkAmount > 0) {
+      const context = rooms[room].canvas.getContext('2d');
+      let before = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+      context.strokeStyle = rooms[room].color;
+      context.lineWidth = 5;
+      context.lineCap = 'round'; 
+      context.beginPath();
+      context.moveTo(coords[0], coords[1]);
+      context.lineTo(coords[2], coords[3]);
+      context.stroke();
+      context.closePath();
+      let after = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+      let pixelsChanged = 0;
+      // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding
+      for (let i = 0; i < before.data.length; i += 4) {
+        for (let j = 0; j < 3; j++) {
+          if (before.data[i+j] !== after.data[i+j]) {
+            pixelsChanged += 1;
+            break;
+          }
+        }
+      }
+      rooms[room].inkAmount -= (pixelsChanged / pixelsPerPercent);
+      // TODO: Simulate the draw and count pixels
+      // TODO: Validate line length?
+      // socket.to(room).emit('draw', { coords: coords, color: rooms[room].color, inkAmount: rooms[room].inkAmount });
+      io.to(room).emit('draw', { coords: coords, color: rooms[room].color, inkAmount: rooms[room].inkAmount });
+      rooms[room].lines.push({ line: coords, color: rooms[room].color });
     }
   });
 });

@@ -2,7 +2,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useEffect, useState } f
 
 import * as workerTimers from 'worker-timers';
 
-const pixels_per_percent = 40;
+// const pixels_per_percent = 10;
 
 function drawLine(context, coords, color) {
   if (color) context.strokeStyle = color;
@@ -13,7 +13,7 @@ function drawLine(context, coords, color) {
   context.stroke();
   context.closePath();
 };
-    
+
 function useCanvas() {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -31,7 +31,7 @@ function useCanvas() {
 
 const Canvas = forwardRef((props, ref) => {
   const canvasRef = useCanvas();
-  let [inkAmount, setInkAmount] = useState(35);
+  let [inkAmount, setInkAmount] = useState(0);
   let [inkColor, setInkColor] = useState("");
   let [penDown, setPenDown] = useState(false);
   let [x1, setX1] = useState(0);
@@ -42,7 +42,6 @@ const Canvas = forwardRef((props, ref) => {
       setInkAmount(inkAmount);
       setInkColor(color);
       canvasRef.current.getContext('2d').strokeStyle = color;
-      // TODO: Set ink bar color
     },
 
     clearScreen(color) {
@@ -75,26 +74,30 @@ const Canvas = forwardRef((props, ref) => {
   }));
 
   const mouseMove = (e) => {
+    // TODO: This is serverside to ensure consistency - make it more responsive by making the visuals clientside
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    // const context = canvas.getContext('2d');
 
     e.preventDefault();
     e.stopPropagation();
     if (!penDown || !props.myTurn || inkAmount <= 0) return;
     let x2 = e.clientX - canvas.offsetLeft;
     let y2 = e.clientY - canvas.offsetTop;
-    let data1 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-    drawLine(context, [x1, y1, x2, y2]);
-    let data2 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-    let pixels_changed = 0;
-    // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding
-    for (let i = 0; i < data1.data.length; i += 4) {
-      for (let j = 0; j < 3; j++) {
-        if (data1.data[i+j] !== data2.data[i+j]) pixels_changed += 1;
-      }
-    }
-    setInkAmount(amount => amount - (pixels_changed / pixels_per_percent));
     props.socket.emit('draw', [x1, y1, x2, y2]);
+    // let data1 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+    // drawLine(context, [x1, y1, x2, y2]);
+    // let data2 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+    // let pixels_changed = 0;
+    // // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding
+    // for (let i = 0; i < data1.data.length; i += 4) {
+    //   for (let j = 0; j < 3; j++) {
+    //     if (data1.data[i+j] !== data2.data[i+j]) {
+    //       pixels_changed += 1;
+    //       break;
+    //     }
+    //   }
+    // }
+    // setInkAmount(amount => amount - (pixels_changed / pixels_per_percent));
     setX1(x2);
     setY1(y2);
   };
@@ -103,7 +106,10 @@ const Canvas = forwardRef((props, ref) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    props.socket.on('draw', data => drawLine(context, data.coords, data.color));
+    props.socket.on('draw', data => {
+      drawLine(context, data.coords, data.color);
+      setInkAmount(data.inkAmount);
+    });
 
     props.socket.on('initialize', room => {
       for (let data of room.lines) {

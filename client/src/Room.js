@@ -29,22 +29,16 @@ const Room = props => {
 
   useEffect(() => {
     props.socket.on("players_changed", (room) => {
-      console.log(room);
       setUsers(room.users);
-      // setPainter(room.users[1] || null);
-      // setGuesser(room.users[2] || null);
     });
 
     props.socket.on("initialize", (room) => {
-      console.log(room);
       setUsers(room.users);
       setPainter(room.painter);
       setGuesser(room.guesser);
     });
 
     props.socket.on('round_started', data => {
-      console.log("Guesser:", data.guesser);
-      // TODO: Draw paint order correctly
       setGuesser(data.guesser);
       setPainter(null);
       setPaintOrder(data.paintOrder);
@@ -53,7 +47,6 @@ const Room = props => {
     });
 
     props.socket.on('start_draw', data => {
-      console.log(data);
       let {painter: _painter, inkAmount, color} = data;
       setPainter(_painter);
       canvasRef.current.setInk(inkAmount, color);
@@ -62,7 +55,6 @@ const Room = props => {
     });
 
     props.socket.on('your_turn', () => {
-      console.log("My turn!!");
       setMyTurn(true);
     });
 

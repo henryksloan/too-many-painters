@@ -43,6 +43,11 @@ canvas {
 .draw-area progress.cyan[value]::-webkit-progress-value { background-color: cyan; }
 .draw-area progress.darkred[value]::-webkit-progress-value { background-color: darkred; }
 .draw-area progress.darkgreen[value]::-webkit-progress-value { background-color: darkgreen; }
+.draw-area progress.yellow[value]::-webkit-progress-value { background-color: yellow; }
+.draw-area progress.orange[value]::-webkit-progress-value { background-color: orange; }
+.draw-area progress.gray[value]::-webkit-progress-value { background-color: gray; }
+.draw-area progress.purple[value]::-webkit-progress-value { background-color: purple; }
+.draw-area progress.pink[value]::-webkit-progress-value { background-color: pink; }
 
 .box {
   box-shadow: 0 0 4px 0 rgb(0 0 0 / 50%);
