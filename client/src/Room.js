@@ -1,5 +1,7 @@
 import './Room.css';
 
+import * as workerTimers from 'worker-timers';
+
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -16,10 +18,9 @@ const Room = props => {
   let [drawTimer, setDrawTimer] = useState(0);
 
   async function roundCountdown() {
-    if (!canvasRef.current) return;
-    canvasRef.current.clearScreen('#EEEEEE');
     for (let i = 3; i > 0; i--) {
       if (!canvasRef.current) return;
+      canvasRef.current.clearScreen('#EEEEEE');
       canvasRef.current.drawNumber(i);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -28,31 +29,24 @@ const Room = props => {
 
   useEffect(() => {
     props.socket.on("players_changed", (room) => {
-      console.log(room);
       setUsers(room.users);
-      // setPainter(room.users[1] || null);
-      // setGuesser(room.users[2] || null);
     });
 
     props.socket.on("initialize", (room) => {
-      console.log(room);
       setUsers(room.users);
       setPainter(room.painter);
       setGuesser(room.guesser);
     });
 
     props.socket.on('round_started', data => {
-      console.log("Guesser:", data.guesser);
-      // TODO: Draw paint order correctly
       setGuesser(data.guesser);
       setPainter(null);
-      setPaintOrder(data.paint_order);
+      setPaintOrder(data.paintOrder);
       setMyTurn(false);
       roundCountdown();
     });
 
     props.socket.on('start_draw', data => {
-      console.log(data);
       let {painter: _painter, inkAmount, color} = data;
       setPainter(_painter);
       canvasRef.current.setInk(inkAmount, color);
@@ -61,7 +55,6 @@ const Room = props => {
     });
 
     props.socket.on('your_turn', () => {
-      console.log("My turn!!");
       setMyTurn(true);
     });
 
@@ -76,8 +69,8 @@ const Room = props => {
 
   useEffect(() => {
     if (drawTimer <= 0) return;
-    const interval = setInterval(() => setDrawTimer(timer => timer - 1), 1000);
-    return () => { clearInterval(interval) };
+    const interval = workerTimers.setInterval(() => setDrawTimer(timer => timer - 1), 1000);
+    return () => { workerTimers.clearInterval(interval) };
   }, [drawTimer])
 
 
@@ -100,15 +93,25 @@ const Room = props => {
 
   return (
     <div className="room">
-      <h3>{ myTurn ? "Turn! " : "" }{ drawTimer }</h3>
+      <div className="round-area box">
+        <h3>Round x of y</h3>
+        <h2>The words ___ here</h2>
+        <span></span>
+      </div>
       <div className="game-area">
-        <div className="painter-list">
+        <div className="painter-list box">
+          <div className="painter-header box-header">
+            <h2>Painters</h2>
+          </div>
           <ol>{ painterList }</ol>
         </div>
-        <Canvas ref={ canvasRef } socket={ props.socket } myTurn={ myTurn } />
-        <div className="guesser-area">
-          Guesser:<br />
-          <strong>{ guesser }</strong>
+        <Canvas ref={ canvasRef } socket={ props.socket }
+          drawTimer={ drawTimer} myTurn={ myTurn } />
+        <div className="guesser-area box">
+          <div className="guesser-name box-header">
+            <strong>Guesser</strong>
+            <p>{ guesser }</p>
+          </div>
         </div>
       </div>
       <ol>{ userList }</ol>

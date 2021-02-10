@@ -1,8 +1,11 @@
 import React, { forwardRef, useImperativeHandle, useRef, useEffect, useState } from 'react'
 
-const pixels_per_percent = 40;
+import * as workerTimers from 'worker-timers';
 
-function drawLine(context, coords) {
+// const pixels_per_percent = 10;
+
+function drawLine(context, coords, color) {
+  if (color) context.strokeStyle = color;
   // TODO: Only partially draw lines that would exceed inkAmount
   context.beginPath();
   context.moveTo(coords[0], coords[1]);
@@ -10,7 +13,7 @@ function drawLine(context, coords) {
   context.stroke();
   context.closePath();
 };
-    
+
 function useCanvas() {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -28,7 +31,8 @@ function useCanvas() {
 
 const Canvas = forwardRef((props, ref) => {
   const canvasRef = useCanvas();
-  let [inkAmount, setInkAmount] = useState(35);
+  let [inkAmount, setInkAmount] = useState(0);
+  let [inkColor, setInkColor] = useState("");
   let [penDown, setPenDown] = useState(false);
   let [x1, setX1] = useState(0);
   let [y1, setY1] = useState(0);
@@ -36,6 +40,7 @@ const Canvas = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     setInk(inkAmount, color) {
       setInkAmount(inkAmount);
+      setInkColor(color);
       canvasRef.current.getContext('2d').strokeStyle = color;
     },
 
@@ -61,32 +66,38 @@ const Canvas = forwardRef((props, ref) => {
         ctx.strokeStyle = "#1f2f90";
         ctx.strokeText(txt[i], x, y);
         ctx.strokeStyle = oldStrokeStyle;
-        if (dashOffset > 0) requestAnimationFrame(loop);
+        // if (dashOffset > 0) requestAnimationFrame(loop);
+        if (dashOffset > 0) workerTimers.setTimeout(loop, 16);
       })();
+      ctx.fillRect(x, y - 90, 60, 150);
     },
   }));
 
   const mouseMove = (e) => {
+    // TODO: This is serverside to ensure consistency - make it more responsive by making the visuals clientside
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    // const context = canvas.getContext('2d');
 
     e.preventDefault();
     e.stopPropagation();
     if (!penDown || !props.myTurn || inkAmount <= 0) return;
     let x2 = e.clientX - canvas.offsetLeft;
     let y2 = e.clientY - canvas.offsetTop;
-    let data1 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-    drawLine(context, [x1, y1, x2, y2]);
-    let data2 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-    let pixels_changed = 0;
-    // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding
-    for (let i = 0; i < data1.data.length; i += 4) {
-      for (let j = 0; j < 3; j++) {
-        if (data1.data[i+j] !== data2.data[i+j]) pixels_changed += 1;
-      }
-    }
-    setInkAmount(amount => amount - (pixels_changed / pixels_per_percent));
     props.socket.emit('draw', [x1, y1, x2, y2]);
+    // let data1 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+    // drawLine(context, [x1, y1, x2, y2]);
+    // let data2 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+    // let pixels_changed = 0;
+    // // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding
+    // for (let i = 0; i < data1.data.length; i += 4) {
+    //   for (let j = 0; j < 3; j++) {
+    //     if (data1.data[i+j] !== data2.data[i+j]) {
+    //       pixels_changed += 1;
+    //       break;
+    //     }
+    //   }
+    // }
+    // setInkAmount(amount => amount - (pixels_changed / pixels_per_percent));
     setX1(x2);
     setY1(y2);
   };
@@ -95,11 +106,14 @@ const Canvas = forwardRef((props, ref) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    props.socket.on('draw', line => drawLine(context, line));
+    props.socket.on('draw', data => {
+      drawLine(context, data.coords, data.color);
+      setInkAmount(data.inkAmount);
+    });
 
     props.socket.on('initialize', room => {
       for (let data of room.lines) {
-        drawLine(context, data);
+        drawLine(context, data.line, data.color);
       }
     });
 
@@ -146,8 +160,10 @@ const Canvas = forwardRef((props, ref) => {
   return (
     <div className="draw-area">
       <canvas ref={canvasRef} onMouseMove={ mouseMove } width="500" height="400" />
-      <progress value={ inkAmount } max="100">{ inkAmount }%</progress>
-      { inkAmount }%
+      <div className="draw-info box">
+        <h3>{ props.drawTimer }</h3>
+        <progress value={ inkAmount } max="100" className={ inkColor }>{ inkAmount }%</progress>
+      </div>
   </div>
   )
 });

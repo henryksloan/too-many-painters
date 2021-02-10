@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 
 import './App.css';
+import logo from './assets/logo.png';
 import Lobby from './Lobby';
 import Room from './Room';
 import Home from './Home';
@@ -20,7 +21,7 @@ function App() {
     <Router>
       <div className="App">
         <header className="App-header">
-          <Link to="/">Too Many Painters</Link>
+          <Link to="/"><img src={logo} alt="Too Many Painters" /></Link>
         </header>
 
         <Switch>
