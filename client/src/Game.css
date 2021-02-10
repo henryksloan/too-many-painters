@@ -68,7 +68,7 @@ canvas {
   background-color: #fefefe;
 }
 
-.room {
+.game {
   display: inline-flex;
   flex-direction: column;
 }

@@ -8,7 +8,6 @@ import {
 
 import './App.css';
 import logo from './assets/logo.png';
-import Lobby from './Lobby';
 import Room from './Room';
 import Home from './Home';
 
@@ -27,9 +26,6 @@ function App() {
         <Switch>
           <Route path='/room/:roomId'>
             <Room socket={ socket } />
-          </Route>
-          <Route path='/lobby/:roomId'>
-            <Lobby socket={ socket } />
           </Route>
           <Route path='/'>
             <Home socket={ socket } />
