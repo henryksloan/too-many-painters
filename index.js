@@ -192,7 +192,6 @@ io.on('connection', (socket) => {
       console.log(`${socket.id} leaving room ${userRooms[socket.id]}`);
       const index = rooms[userRooms[socket.id]].users.indexOf(socket.id);
       rooms[userRooms[socket.id]].users.splice(index, 1);
-      socket.to(userRooms[socket.id]).emit('players_changed', rooms[userRooms[socket.id]]);
       socket.to(userRooms[socket.id]).emit('players_changed', {
         users: rooms[userRooms[socket.id]].users
       });

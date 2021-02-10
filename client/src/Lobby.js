@@ -11,12 +11,10 @@ const Lobby = props => {
     let isRendered = true;
 
     props.socket.on("players_changed", (room) => {
-      console.log(room);
       if (isRendered) setUsers(room.users);
     });
 
     props.socket.on("initialize", (room) => {
-      console.log(room);
       if (isRendered) setUsers(room.users);
     });
 
@@ -29,7 +27,6 @@ const Lobby = props => {
 
     return () => {
       isRendered = false;
-      console.log("Leaving " + gameStarting);
       if (!gameStarting) props.socket.emit("leave_room");
       props.socket.removeAllListeners();
     }

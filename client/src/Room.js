@@ -93,16 +93,25 @@ const Room = props => {
 
   return (
     <div className="room">
+      <div className="round-area box">
+        <h3>Round x of y</h3>
+        <h2>The words ___ here</h2>
+        <span></span>
+      </div>
       <div className="game-area">
         <div className="painter-list box">
-          Round x of y:<br />
+          <div className="painter-header box-header">
+            <h2>Painters</h2>
+          </div>
           <ol>{ painterList }</ol>
         </div>
         <Canvas ref={ canvasRef } socket={ props.socket }
           drawTimer={ drawTimer} myTurn={ myTurn } />
         <div className="guesser-area box">
-          Guesser:<br />
-          <strong>{ guesser }</strong>
+          <div className="guesser-name box-header">
+            <strong>Guesser</strong>
+            <p>{ guesser }</p>
+          </div>
         </div>
       </div>
       <ol>{ userList }</ol>

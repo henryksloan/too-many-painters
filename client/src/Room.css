@@ -1,5 +1,4 @@
 canvas {
-  /* border: 3px solid black; */
   background: white;
 }
 
@@ -17,11 +16,24 @@ canvas {
 .draw-info {
   height: 35px;
   margin-top: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.draw-info h3 {
+  padding-right: 8px;
+}
+
+.draw-info progress {
+  flex-grow: 1;
 }
 
 .draw-area progress { 
   -webkit-appearance: none;
   appearance: none;
+  width: 400px;
 }
 
 .draw-area progress::-webkit-progress-bar {
@@ -56,12 +68,59 @@ canvas {
   background-color: #fefefe;
 }
 
+.room {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.round-area {
+  padding: 16px;
+  margin: 8px 0;
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  line-height: 10px;
+}
+
+.round-area p {
+  margin: 0;
+}
+
+.round-area h2 {
+  margin: 0;
+  letter-spacing: 4px;
+}
+
+.round-area h3 {
+  margin: 0;
+}
+
 .painter-list {
   width: 250px;
-  padding: 4px;
+}
+
+.painter-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.painter-header h2 {
+  margin: 0;
 }
 
 .guesser-area {
   width: 250px;
-  padding: 4px;
+}
+
+.box-header {
+  text-align: center;
+  border-radius: 4px 4px 0 0;
+  min-height: 50px;
+  background-color: #eeeeee;
+}
+
+.guesser-name p {
+  margin: 0;
 }
