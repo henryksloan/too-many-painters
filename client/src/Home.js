@@ -6,7 +6,7 @@ const Lobby = props => {
 
   useEffect(() => {
     props.socket.on("room_created", (id) => {
-      history.push(`/lobby/${id}`);
+      history.push(`/room/${id}`);
     });
 
     return () => { props.socket.removeAllListeners() };

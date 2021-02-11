@@ -1,65 +1,65 @@
-import './Room.css';
-
-import * as workerTimers from 'worker-timers';
-
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
 
-import Canvas from './Canvas';
+import Game from './Game';
+import Lobby from './Lobby';
 
 const Room = props => {
   let { roomId } = useParams();
-  let canvasRef = useRef();
-  let [users, setUsers] = useState([]);
+  let [started, setStarted] = useState(false);
+  let [players, setPlayers] = useState([]);
   let [painter, setPainter] = useState(null);
   let [paintOrder, setPaintOrder] = useState([]);
   let [guesser, setGuesser] = useState(null);
   let [myTurn, setMyTurn] = useState(false);
-  let [drawTimer, setDrawTimer] = useState(0);
-
-  async function roundCountdown() {
-    for (let i = 3; i > 0; i--) {
-      if (!canvasRef.current) return;
-      canvasRef.current.clearScreen('#EEEEEE');
-      canvasRef.current.drawNumber(i);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-    if (canvasRef.current) canvasRef.current.clearScreen();
-  }
+  let [myTurnGuess, setMyTurnGuess] = useState(false);
+  let [word, setWord] = useState('');
+  let [chat, setChat] = useState([]);
 
   useEffect(() => {
-    props.socket.on("players_changed", (room) => {
-      setUsers(room.users);
+    // TODO: Catch exceptions and probably show some other page
+    props.socket.emit('join_room', roomId);
+
+    props.socket.on('room_joined', data => {
+      console.log(data);
+      setStarted(data.started);
+      setPlayers(data.players);
+      setPainter(data.painter);
+      setPaintOrder(data.paintOrder);
+      setGuesser(data.guesser);
     });
 
-    props.socket.on("initialize", (room) => {
-      setUsers(room.users);
-      setPainter(room.painter);
-      setGuesser(room.guesser);
+    props.socket.on('room_started', () => {
+      setStarted(true);
     });
+
+    props.socket.on('players_changed', setPlayers);
 
     props.socket.on('round_started', data => {
       setGuesser(data.guesser);
       setPainter(null);
       setPaintOrder(data.paintOrder);
       setMyTurn(false);
-      roundCountdown();
+      setMyTurnGuess(false);
+      setWord(data.word);
+      setChat(curr => curr.concat(<small key={curr.length}>Round start: { data.guesser.slice() }</small>));
+    });
+
+    props.socket.on('guess', data => {
+      setChat(curr => curr.concat(
+        <p key={curr.length} className={data.correct ? 'correct-guess' : ''}>
+          {data.sender}: {data.content}
+        </p>));
     });
 
     props.socket.on('start_draw', data => {
-      let {painter: _painter, inkAmount, color} = data;
+      let { painter: _painter } = data;
       setPainter(_painter);
-      canvasRef.current.setInk(inkAmount, color);
       setMyTurn(false);
-      setDrawTimer(5);
     });
 
-    props.socket.on('your_turn', () => {
-      setMyTurn(true);
-    });
-
-    props.socket.emit('join_room', roomId);
-    props.socket.emit('initialize');
+    props.socket.on('your_turn', () => setMyTurn(true));
+    props.socket.on('your_turn_guess', () => setMyTurnGuess(true));
 
     return () => {
       props.socket.emit('leave_room');
@@ -67,54 +67,16 @@ const Room = props => {
     };
   }, [props.socket, roomId]);
 
-  useEffect(() => {
-    if (drawTimer <= 0) return;
-    const interval = workerTimers.setInterval(() => setDrawTimer(timer => timer - 1), 1000);
-    return () => { workerTimers.clearInterval(interval) };
-  }, [drawTimer])
-
-
-  const painterList = paintOrder.map((user) => {
-    if (user === painter) {
-      return <li key={ user }><strong>{ user }</strong></li>
-    } else {
-      return <li key={ user }>{ user }</li>
-    }
-  });
-  const userList = users.map((user) => {
-    if (user === painter) {
-      return <li key={ user }><strong>{ user }</strong></li>
-    } else if (user === guesser) {
-      return <li key={ user }><i>{ user }</i></li>
-    } else {
-      return <li key={ user }>{ user }</li>
-    }
-  });
-
   return (
     <div className="room">
-      <div className="round-area box">
-        <h3>Round x of y</h3>
-        <h2>The words ___ here</h2>
-        <span></span>
-      </div>
-      <div className="game-area">
-        <div className="painter-list box">
-          <div className="painter-header box-header">
-            <h2>Painters</h2>
-          </div>
-          <ol>{ painterList }</ol>
-        </div>
-        <Canvas ref={ canvasRef } socket={ props.socket }
-          drawTimer={ drawTimer} myTurn={ myTurn } />
-        <div className="guesser-area box">
-          <div className="guesser-name box-header">
-            <strong>Guesser</strong>
-            <p>{ guesser }</p>
-          </div>
-        </div>
-      </div>
-      <ol>{ userList }</ol>
+      {
+        started
+        ? <Game socket={props.socket} players={players}
+            myTurn={myTurn} myTurnGuess={myTurnGuess}
+            paintOrder={paintOrder} painter={painter}
+            guesser={guesser} word={word} chat={chat} />
+        : <Lobby socket={props.socket} players={players} />
+      }
     </div>
   );
 }

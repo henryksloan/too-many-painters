@@ -68,7 +68,7 @@ canvas {
   background-color: #fefefe;
 }
 
-.room {
+.game {
   display: inline-flex;
   flex-direction: column;
 }
@@ -83,8 +83,14 @@ canvas {
   line-height: 10px;
 }
 
-.round-area p {
+.round-area > * {
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
+.round-area h3 {
   margin: 0;
+  text-align: left;
 }
 
 .round-area h2 {
@@ -92,12 +98,9 @@ canvas {
   letter-spacing: 4px;
 }
 
-.round-area h3 {
-  margin: 0;
-}
-
 .painter-list {
   width: 250px;
+  height: 440px;
 }
 
 .painter-header {
@@ -112,6 +115,9 @@ canvas {
 
 .guesser-area {
   width: 250px;
+  height: 440px;
+  display: flex;
+  flex-direction: column;
 }
 
 .box-header {
@@ -123,4 +129,29 @@ canvas {
 
 .guesser-name p {
   margin: 0;
+}
+
+.chat-area {
+  flex-grow: 1;
+  padding: 0 4px;
+  overflow-y: auto;
+}
+
+.chat-area p {
+  margin: 0;
+}
+
+.chat-area .correct-guess {
+  font-weight: bold;
+  color: green;
+}
+
+.chat-area small {
+  display: block;
+  margin: 8px 0 2px 0;
+}
+
+.guesser-area input {
+  margin: 4px;
+  padding: 4px;
 }
