@@ -61,13 +61,6 @@ canvas {
 .draw-area progress.purple[value]::-webkit-progress-value { background-color: purple; }
 .draw-area progress.pink[value]::-webkit-progress-value { background-color: pink; }
 
-.box {
-  box-shadow: 0 0 4px 0 rgb(0 0 0 / 50%);
-  border-radius: 4px;
-  text-align: left;
-  background-color: #fefefe;
-}
-
 .game {
   display: inline-flex;
   flex-direction: column;
@@ -75,7 +68,7 @@ canvas {
 
 .round-area {
   padding: 16px;
-  margin: 8px 0;
+  margin-bottom: 8px;
   text-align: center;
   display: flex;
   flex-direction: row;
@@ -109,22 +102,11 @@ canvas {
   align-items: center;
 }
 
-.painter-header h2 {
-  margin: 0;
-}
-
 .guesser-area {
   width: 250px;
   height: 440px;
   display: flex;
   flex-direction: column;
-}
-
-.box-header {
-  text-align: center;
-  border-radius: 4px 4px 0 0;
-  min-height: 50px;
-  background-color: #eeeeee;
 }
 
 .guesser-name p {

@@ -40,9 +40,3 @@
 .home-panel li {
   margin-bottom: 3px;
 }
-
-@media only screen and (max-width: 600px) {
-  body {
-    padding: 4px;
-  }
-}

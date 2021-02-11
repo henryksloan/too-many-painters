@@ -1,0 +1,63 @@
+.lobby {
+  margin: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  height: 500px;
+}
+
+.lobby-user-list {
+  flex-basis: 250px;
+  margin-right: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby .box-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lobby-user-list ul {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.name-button-area {
+  line-height: 50px;
+}
+
+.name-button-area button {
+  cursor: pointer;
+  font-size: 1.0em;
+  border: 1px solid gray;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.lobby-game-settings {
+  flex: 1 1 0;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-settings-area {
+  flex-grow: 1;
+}
+
+.start-button-area button {
+  display: block;
+  margin: auto;
+  margin-bottom: 8px;
+
+  cursor: pointer;
+  background-color: mediumseagreen;
+  color: white;
+  font-weight: bold;
+  font-size: 1.0em;
+  border: 1px solid gray;
+  border-radius: 4px;
+  padding: 8px 40px;
+}
