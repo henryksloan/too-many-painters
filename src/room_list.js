@@ -31,6 +31,7 @@ module.exports = class RoomList {
       return;
     }
 
+    // TODO: Room capacity maximum
     console.log(`${socket.id} joining room ${roomId}`);
     socket.join(roomId);
     this.userRooms[socket.id] = roomId;

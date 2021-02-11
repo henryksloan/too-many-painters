@@ -12,10 +12,12 @@ const Room = props => {
   let [paintOrder, setPaintOrder] = useState([]);
   let [guesser, setGuesser] = useState(null);
   let [myTurn, setMyTurn] = useState(false);
+  let [word, setWord] = useState('');
 
   useEffect(() => {
     // TODO: Catch exceptions and probably show some other page
     props.socket.emit('join_room', roomId);
+
     props.socket.on('room_joined', data => {
       console.log(data);
       setStarted(data.started);
@@ -29,12 +31,14 @@ const Room = props => {
       setStarted(true);
     });
 
+    props.socket.on('players_changed', setPlayers);
+
     props.socket.on('round_started', data => {
-      console.log("RS", data);
       setGuesser(data.guesser);
       setPainter(null);
       setPaintOrder(data.paintOrder);
       setMyTurn(false);
+      setWord(data.word);
     });
 
     props.socket.on('start_draw', data => {
@@ -58,7 +62,7 @@ const Room = props => {
       {
         started
         ? <Game socket={props.socket} players={players} myTurn={myTurn}
-          paintOrder={paintOrder} painter={painter} guesser={guesser} />
+          paintOrder={paintOrder} painter={painter} guesser={guesser} word={word} />
         : <Lobby socket={props.socket} players={players} />
       }
     </div>

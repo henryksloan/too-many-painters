@@ -6,6 +6,22 @@ const inkMax = 100, inkMin = 35;
 const pixelsPerPercent = 10;
 // TODO: Should white be here as a funny eraser? Maybe make it rare and special on the frontend (like an eraser)?
 const colors = ['red', 'blue', 'green', 'black', 'cyan', 'darkred', 'darkgreen', 'yellow', 'orange', 'gray', 'purple', 'pink'];
+const words = 
+  ["bridge", "bone", "grapes", "bell",
+  "jellyfish", "bunny", "truck", "grass",
+  "door", "monkey", "spider", "bread",
+  "ears", "bowl", "bracelet", "alligator",
+  "bat", "clock", "lollipop", "moon",
+  "doll", "orange", "ear", "basketball",
+  "bike", "airplane", "pen", "seashell",
+  "rocket", "cloud", "bear", "corn",
+  "chicken", "purse", "glasses", "blocks",
+  "carrot", "turtle", "pencil", "horse",
+  "dinosaur", "head", "lamp", "snowman",
+  "ant", "giraffe", "cupcake", "chair",
+  "leaf", "bunk bed", "snail", "baby",
+  "balloon", "bus", "cherry", "crab",
+  "football", "branch", "robot"];
 
 module.exports = class Room {
   constructor(id) {
@@ -21,6 +37,7 @@ module.exports = class Room {
     this.paintOrder = []; // Applies to a single round
     this.painter = null;
 
+    this.word = '';
     this.lines = []; // [{ coords: [x1, y1, x2, y2], color: ...}, ...]
     this.inkAmount = 0;
     this.color = '';
@@ -58,23 +75,27 @@ module.exports = class Room {
     this.players.push(socket.id);
     this.sockets[socket.id] = socket;
     this.usernames[socket.id] = username;
-    // If game is in lobby, is it full?
-    // If game is started, inject them into the draw order if possible?
-    // Technically, that could make for rounds of infinite length if players keep cycling in
-    // It would probably be better to make them wait till the next round... That wouldn't complicate logic very much at all
-    // What if started && !playStarted?
+    io.to(this.id).emit('players_changed', this.getPlayerList());
   }
 
   // Returns true if the room is now empty
   playerLeave(socketId) {
+    const wasPainter = socketId === this.painter;
+    const wasGuesser = socketId === this.guesser;
+
     const index = this.players.indexOf(socketId);
     this.players.splice(index, 1);
     delete this.sockets[socketId];
     delete this.usernames[socketId];
+
+    io.to(this.id).emit('players_changed', this.getPlayerList());
+    if (wasPainter) {
+      this.timesUp(); // TODO: What about score popup? Be careful!
+    } else if (wasGuesser) {
+      this.endRound(); // TODO: What about score popup? Be careful!
+    }
+
     return this.players.length == 0;
-    // TODO: Send signal to update client side user lists and state
-    // TODO: What if the leaver is the current guesser or painter?
-    // TODO: What if the players are counting down the round? Make sure the right signal is sent when they start
   }
 
   playerLoaded(socketId) {
@@ -94,6 +115,7 @@ module.exports = class Room {
     this.guesser = this.guessOrder[0];
     this.updatePaintOrder();
 
+    this.word = '';
     this.lines = [];
     this.inkAmount = 0;
     this.color = '';
@@ -108,10 +130,19 @@ module.exports = class Room {
 
   roundStart() {
     console.log("Round started");
-    io.to(this.id).emit('round_started', {
-      guesser: this.guesser,
-      paintOrder: this.paintOrder
-    });
+
+    this.word = words[Math.floor(Math.random() * words.length)];
+    for (let player of this.players) {
+      let word = (player === this.guesser)
+        ? this.word.replace(/[^\s]/g, '_')
+        : this.word;
+      // io.to(this.id).emit('round_started', {
+      this.sockets[player].emit('round_started', {
+        guesser: this.guesser,
+        paintOrder: this.paintOrder,
+        word
+      });
+    }
 
     this.lines = [];
     const context = this.canvas.getContext('2d');
@@ -142,17 +173,21 @@ module.exports = class Room {
       this.painter = this.paintOrder[painterIndex + 1];
       this.startDraw();
     } else {
-      console.log("Round end");
-      // TODO: Maybe extra guess time?
-      let guesserIndex = this.guessOrder.indexOf(this.guesser);
-      if (guesserIndex < this.guessOrder.length - 1) {
-        this.guesser = this.guessOrder[guesserIndex + 1];
-        this.updatePaintOrder();
-        this.roundStart();
-      } else {
-        // TODO: What to do when number of rounds exceeds number of players to guess? Probably just loop through.
-        console.log("Game end?")
-      }
+      this.endRound();
+    }
+  }
+
+  endRound() {
+    console.log("Round end");
+    // TODO: Maybe extra guess time?
+    let guesserIndex = this.guessOrder.indexOf(this.guesser);
+    if (guesserIndex < this.guessOrder.length - 1) {
+      this.guesser = this.guessOrder[guesserIndex + 1];
+      this.updatePaintOrder();
+      this.roundStart();
+    } else {
+      // TODO: What to do when number of rounds exceeds number of players to guess? Probably just loop through.
+      console.log("Game end?")
     }
   }
 

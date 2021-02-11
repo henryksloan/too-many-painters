@@ -65,7 +65,7 @@ const Game = props => {
     <div className="game">
       <div className="round-area box">
         <h3>Round x of y</h3>
-        <h2>The words ___ here</h2>
+        <h2>{ props.word }</h2>
         <span></span>
       </div>
       <div className="game-area">
