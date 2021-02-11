@@ -3,7 +3,9 @@
 }
 
 .App-header img {
-  max-width: 600px;
+  max-width: 100%;
+  height: auto;
+  max-height: 87px;
 }
 
 body {
