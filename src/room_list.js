@@ -81,4 +81,13 @@ module.exports = class RoomList {
       this.rooms[roomId].draw(socket.id, coords);
     }
   }
+
+  guess(socket, str) {
+    const roomId = this.userRooms[socket.id];
+    if (!roomId) {
+      socket.emit('exception', {errorMessage: 'User is not in a room'});
+    } else {
+      this.rooms[roomId].guess(socket.id, str);
+    }
+  }
 }

@@ -72,6 +72,7 @@ module.exports = class Room {
   }
 
   playerJoin(socket, username) {
+    // TODO: Should they be added to guess order?
     this.players.push(socket.id);
     this.sockets[socket.id] = socket;
     this.usernames[socket.id] = username;
@@ -87,6 +88,7 @@ module.exports = class Room {
     this.players.splice(index, 1);
     delete this.sockets[socketId];
     delete this.usernames[socketId];
+    this.guessOrder = this.guessOrder.filter(x => x != socketId);
 
     io.to(this.id).emit('players_changed', this.getPlayerList());
     if (wasPainter) {
@@ -102,7 +104,10 @@ module.exports = class Room {
     if (!this.playStarted) {
       this.playersLoading = this.playersLoading.filter(x => x != socketId);
       console.log(`${socketId} finished loading into room ${this.id}`);
-      if (this.playersLoading.length == 0) this.roundStart();
+      if (this.playersLoading.length == 0) {
+        this.playStarted = true;
+        this.roundStart();
+      }
     }
   }
 
@@ -143,6 +148,7 @@ module.exports = class Room {
         word
       });
     }
+    io.to(this.guesser).emit('your_turn_guess');
 
     this.lines = [];
     const context = this.canvas.getContext('2d');
@@ -179,6 +185,7 @@ module.exports = class Room {
 
   endRound() {
     console.log("Round end");
+    // TODO: Should probably take parameter for score, e.g. if it was preemptively ended (i.e. no score, maybe skip the popup)
     // TODO: Maybe extra guess time?
     let guesserIndex = this.guessOrder.indexOf(this.guesser);
     if (guesserIndex < this.guessOrder.length - 1) {
@@ -192,7 +199,7 @@ module.exports = class Room {
   }
 
   draw(socketId, coords) {
-    if (!this.started || this.painter !== socketId || this.inkAmount <= 0) return;
+    if (!this.playStarted || this.painter !== socketId || this.inkAmount <= 0) return;
 
     const context = this.canvas.getContext('2d');
     let before = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
@@ -222,5 +229,16 @@ module.exports = class Room {
     // TODO: Validate line length?
     io.to(this.id).emit('draw', { coords: coords, color: this.color, inkAmount: this.inkAmount });
     this.lines.push({ line: coords, color: this.color });
+  }
+
+  guess(socketId, str) {
+    if (!this.playStarted || this.guesser !== socketId) return;
+
+    const correct = this.word === str;
+    io.to(this.id).emit('guess', { sender: this.guesser, content: str, correct });
+    if (correct) {
+      console.log("Correct!");
+      this.endRound();
+    }
   }
 }

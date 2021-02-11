@@ -11,6 +11,7 @@ const Game = props => {
   let { roomId } = useParams();
   let canvasRef = useRef();
   let [drawTimer, setDrawTimer] = useState(0);
+  let [guess, setGuess] = useState('');
 
   async function roundCountdown() {
     for (let i = 3; i > 0; i--) {
@@ -22,8 +23,17 @@ const Game = props => {
     if (canvasRef.current) canvasRef.current.clearScreen();
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && event.target.value.length > 0) {
+      props.socket.emit('guess', event.target.value);
+      setGuess('');
+    }
+  }
+  const handleChange = (event) => setGuess(event.target.value);
+
   useEffect(() => {
     props.socket.on('round_started', data => {
+      setGuess('');
       roundCountdown();
     });
 
@@ -82,6 +92,11 @@ const Game = props => {
             <strong>Guesser</strong>
             <p>{ props.guesser }</p>
           </div>
+          <div className="chat-area">{ props.chat }</div>
+          <input type="text" value={ guess }
+            onChange={ handleChange } onKeyDown={ handleKeyDown }
+            placeholder={props.myTurnGuess ? "Write your guess here" : ""}
+            disabled={!props.myTurnGuess}></input>
         </div>
       </div>
       <ol>{ playerList }</ol>

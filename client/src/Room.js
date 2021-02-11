@@ -12,7 +12,9 @@ const Room = props => {
   let [paintOrder, setPaintOrder] = useState([]);
   let [guesser, setGuesser] = useState(null);
   let [myTurn, setMyTurn] = useState(false);
+  let [myTurnGuess, setMyTurnGuess] = useState(false);
   let [word, setWord] = useState('');
+  let [chat, setChat] = useState([]);
 
   useEffect(() => {
     // TODO: Catch exceptions and probably show some other page
@@ -38,7 +40,16 @@ const Room = props => {
       setPainter(null);
       setPaintOrder(data.paintOrder);
       setMyTurn(false);
+      setMyTurnGuess(false);
       setWord(data.word);
+      setChat(curr => curr.concat(<small key={curr.length}>Round start: { data.guesser.slice() }</small>));
+    });
+
+    props.socket.on('guess', data => {
+      setChat(curr => curr.concat(
+        <p key={curr.length} className={data.correct ? 'correct-guess' : ''}>
+          {data.sender}: {data.content}
+        </p>));
     });
 
     props.socket.on('start_draw', data => {
@@ -47,9 +58,8 @@ const Room = props => {
       setMyTurn(false);
     });
 
-    props.socket.on('your_turn', () => {
-      setMyTurn(true);
-    });
+    props.socket.on('your_turn', () => setMyTurn(true));
+    props.socket.on('your_turn_guess', () => setMyTurnGuess(true));
 
     return () => {
       props.socket.emit('leave_room');
@@ -61,8 +71,10 @@ const Room = props => {
     <div className="room">
       {
         started
-        ? <Game socket={props.socket} players={players} myTurn={myTurn}
-          paintOrder={paintOrder} painter={painter} guesser={guesser} word={word} />
+        ? <Game socket={props.socket} players={players}
+            myTurn={myTurn} myTurnGuess={myTurnGuess}
+            paintOrder={paintOrder} painter={painter}
+            guesser={guesser} word={word} chat={chat} />
         : <Lobby socket={props.socket} players={players} />
       }
     </div>
