@@ -83,17 +83,19 @@ canvas {
   line-height: 10px;
 }
 
-.round-area p {
+.round-area > * {
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
+.round-area h3 {
   margin: 0;
+  text-align: left;
 }
 
 .round-area h2 {
   margin: 0;
   letter-spacing: 4px;
-}
-
-.round-area h3 {
-  margin: 0;
 }
 
 .painter-list {
@@ -132,7 +134,7 @@ canvas {
 .chat-area {
   flex-grow: 1;
   padding: 0 4px;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .chat-area p {
