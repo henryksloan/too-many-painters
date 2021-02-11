@@ -36,7 +36,7 @@ module.exports = class RoomList {
     socket.join(roomId);
     this.userRooms[socket.id] = roomId;
     this.rooms[roomId].playerJoin(socket, "Username");
-    socket.emit('room_joined', this.rooms[roomId].getPublicData());
+    socket.emit('room_joined', { ...this.rooms[roomId].getPublicData(), selfId: socket.id });
   }
 
   leaveRoom(socket) {

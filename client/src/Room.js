@@ -8,6 +8,7 @@ const Room = props => {
   let { roomId } = useParams();
   let [started, setStarted] = useState(false);
   let [players, setPlayers] = useState([]);
+  let [selfId, setSelfId] = useState(null);
   let [painter, setPainter] = useState(null);
   let [paintOrder, setPaintOrder] = useState([]);
   let [guesser, setGuesser] = useState(null);
@@ -24,6 +25,7 @@ const Room = props => {
       console.log(data);
       setStarted(data.started);
       setPlayers(data.players);
+      setSelfId(data.selfId);
       setPainter(data.painter);
       setPaintOrder(data.paintOrder);
       setGuesser(data.guesser);
@@ -71,11 +73,11 @@ const Room = props => {
     <div className="room">
       {
         started
-        ? <Game socket={props.socket} players={players}
+        ? <Game socket={props.socket} players={players} selfId={selfId}
             myTurn={myTurn} myTurnGuess={myTurnGuess}
             paintOrder={paintOrder} painter={painter}
             guesser={guesser} word={word} chat={chat} />
-        : <Lobby socket={props.socket} players={players} />
+        : <Lobby socket={props.socket} players={players} selfId={selfId} />
       }
     </div>
   );
