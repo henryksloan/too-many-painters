@@ -71,11 +71,19 @@ module.exports = class Room {
     };
   }
 
+  generateUsername() {
+    return "Generated";
+  }
+
   playerJoin(socket, username) {
     // TODO: Should they be added to guess order?
     this.players.push(socket.id);
     this.sockets[socket.id] = socket;
-    this.usernames[socket.id] = username;
+    if (username && typeof username == "string") {
+      this.usernames[socket.id] = username.substring(0, 13)
+    } else {
+      this.usernames[socket.id] = this.generateUsername();
+    }
     io.to(this.id).emit('players_changed', this.getPlayerList());
   }
 
@@ -239,6 +247,13 @@ module.exports = class Room {
     if (correct) {
       console.log("Correct!");
       this.endRound();
+    }
+  }
+
+  changeUsername(socketId, username) {
+    if (username && typeof username == "string" && !this.started) {
+      this.usernames[socketId] = username.substring(0, 13);
+      io.to(this.id).emit('players_changed', this.getPlayerList());
     }
   }
 }

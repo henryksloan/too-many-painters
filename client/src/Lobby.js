@@ -5,6 +5,14 @@ const Lobby = props => {
     ? <li key={ player[0] }><strong>{player[1]} (You)</strong></li>
     : <li key={ player[0] }>{player[1]}</li>);
 
+  function changeUsername() {
+    const username = prompt("Choose your new username");
+    if (username) {
+      localStorage.setItem('username', username);
+      props.socket.emit('change_username', username);
+    }
+  }
+
   return (
     <div className="lobby">
         <div className="lobby-user-list box">
@@ -13,7 +21,9 @@ const Lobby = props => {
           </div>
           <ul>{ userList }</ul>
           <div className="name-button-area box-footer">
-            <button>Change username</button>
+            <button onClick={ changeUsername }>
+              Change Username
+            </button>
           </div>
         </div>
         <div className="lobby-game-settings box">

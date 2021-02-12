@@ -1,10 +1,11 @@
 import './Home.css';
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 
 const Lobby = props => {
   const history = useHistory();
+  const [username, setUsername] = useState(localStorage.getItem('username') || '');
 
   useEffect(() => {
     props.socket.on("room_created", (id) => {
@@ -14,11 +15,16 @@ const Lobby = props => {
     return () => { props.socket.removeAllListeners() };
   }, [history, props.socket]);
 
+  function onUsernameChange(e) {
+    setUsername(e.target.value);
+    localStorage.setItem('username', e.target.value);
+  }
   
   return (
     <div className="home">
       <div className="home-panel box">
-        <input type="text" placeholder="Username" className="username-input"></input>
+        <input type="text" placeholder="Username" className="username-input"
+          value={ username } onChange={ onUsernameChange } maxlength="13"></input>
         <button className="create-room-button"
           onClick={() => props.socket.emit('create_room') }>Create Room</button>
       </div>

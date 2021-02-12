@@ -21,7 +21,7 @@ module.exports = class RoomList {
     creator.emit('room_created', id);
   }
 
-  joinRoom(socket, roomId) {
+  joinRoom(socket, roomId, username) {
     if (!this.rooms[roomId]) {
       socket.emit('exception', {errorMessage: 'No such room exists'});
       return;
@@ -35,7 +35,7 @@ module.exports = class RoomList {
     console.log(`${socket.id} joining room ${roomId}`);
     socket.join(roomId);
     this.userRooms[socket.id] = roomId;
-    this.rooms[roomId].playerJoin(socket, "Username");
+    this.rooms[roomId].playerJoin(socket, username);
     socket.emit('room_joined', { ...this.rooms[roomId].getPublicData(), selfId: socket.id });
   }
 
@@ -88,6 +88,15 @@ module.exports = class RoomList {
       socket.emit('exception', {errorMessage: 'User is not in a room'});
     } else {
       this.rooms[roomId].guess(socket.id, str);
+    }
+  }
+
+  changeUsername(socket, username) {
+    const roomId = this.userRooms[socket.id];
+    if (!roomId) {
+      socket.emit('exception', {errorMessage: 'User is not in a room'});
+    } else {
+      this.rooms[roomId].changeUsername(socket.id, username);
     }
   }
 }

@@ -25,6 +25,7 @@ body {
   border-radius: 4px 4px 0 0;
   min-height: 50px;
   background-color: #eeeeee;
+  border-bottom: 1px solid lightgray;
 }
 
 .box-footer {
@@ -32,6 +33,7 @@ body {
   border-radius: 0 0 4px 4px;
   min-height: 50px;
   background-color: #eeeeee;
+  border-top: 1px solid lightgray;
 }
 
 .box-header h2 {

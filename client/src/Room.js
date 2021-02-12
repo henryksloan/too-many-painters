@@ -19,7 +19,7 @@ const Room = props => {
 
   useEffect(() => {
     // TODO: Catch exceptions and probably show some other page
-    props.socket.emit('join_room', roomId);
+    props.socket.emit('join_room', roomId, localStorage.getItem('username'));
 
     props.socket.on('room_joined', data => {
       console.log(data);
