@@ -44,15 +44,10 @@ const Room = props => {
       setMyTurn(false);
       setMyTurnGuess(false);
       setWord(data.word);
-      setChat(curr => curr.concat(<small key={curr.length}>Round start: { data.guesser.slice() }</small>));
+      setChat(curr => curr.concat({ roundStart: true, guesser: data.guesser.slice() }));
     });
 
-    props.socket.on('guess', data => {
-      setChat(curr => curr.concat(
-        <p key={curr.length} className={data.correct ? 'correct-guess' : ''}>
-          {data.sender}: {data.content}
-        </p>));
-    });
+    props.socket.on('guess', data => setChat(curr => curr.concat(data)));
 
     props.socket.on('start_draw', data => {
       let { painter: _painter } = data;

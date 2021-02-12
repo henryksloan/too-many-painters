@@ -24,7 +24,7 @@ const Lobby = props => {
     <div className="home">
       <div className="home-panel box">
         <input type="text" placeholder="Username" className="username-input"
-          value={ username } onChange={ onUsernameChange } maxlength="13"></input>
+          value={ username } onChange={ onUsernameChange } maxLength="13"></input>
         <button className="create-room-button"
           onClick={() => props.socket.emit('create_room') }>Create Room</button>
       </div>

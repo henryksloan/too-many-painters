@@ -31,6 +31,11 @@ const Game = props => {
   }
   const handleChange = (event) => setGuess(event.target.value);
 
+  const playerString = (player) => {
+    const playerArr = props.players.find(arr => arr[0] === player) || ['', ''];
+    return `${playerArr[1]}${(player === props.selfId) ? ' (You)' : ''}`;
+  }
+
   useEffect(() => {
     props.socket.on('round_started', data => {
       setGuess('');
@@ -55,19 +60,20 @@ const Game = props => {
 
   const painterList = props.paintOrder.map((player) => {
     if (player === props.painter) {
-      return <li key={ player }><strong>{ player }</strong></li>
+      return <li key={ player }><strong>{ playerString(player) }</strong></li>
     } else {
-      return <li key={ player }>{ player }</li>
+      return <li key={ player }>{ playerString(player) }</li>
     }
   });
 
-  const playerList = props.players.map((player) => {
-    if (player === props.painter) {
-      return <li key={ player }><strong>{ player }</strong></li>
-    } else if (player === props.guesser) {
-      return <li key={ player }><i>{ player }</i></li>
+  const chat = props.chat.map((message, index) => {
+    if (message.roundStart) {
+      return <small key={index}>Round start: { playerString(message.guesser.slice()) }</small>
     } else {
-      return <li key={ player }>{ player }</li>
+      return  (
+        <p key={index} className={message.correct ? 'correct-guess' : ''}>
+          {playerString(message.sender)}: {message.content}
+        </p>);
     }
   });
 
@@ -90,16 +96,15 @@ const Game = props => {
         <div className="guesser-area box">
           <div className="guesser-name box-header">
             <strong>Guesser</strong>
-            <p>{ props.guesser }</p>
+            <p>{ playerString(props.guesser) }</p>
           </div>
-          <div className="chat-area">{ props.chat }</div>
+          <div className="chat-area">{ chat }</div>
           <input type="text" value={ guess }
             onChange={ handleChange } onKeyDown={ handleKeyDown }
             placeholder={props.myTurnGuess ? "Write your guess here" : ""}
             disabled={!props.myTurnGuess}></input>
         </div>
       </div>
-      <ol>{ playerList }</ol>
     </div>
   );
 }
