@@ -96,7 +96,6 @@ module.exports = class Room {
     this.players.splice(index, 1);
     delete this.sockets[socketId];
     delete this.usernames[socketId];
-    this.guessOrder = this.guessOrder.filter(x => x != socketId);
 
     io.to(this.id).emit('players_changed', this.getPlayerList());
     if (wasPainter) {
@@ -104,6 +103,8 @@ module.exports = class Room {
     } else if (wasGuesser) {
       this.endRound(); // TODO: What about score popup? Be careful!
     }
+    this.paintOrder = this.paintOrder.filter(x => x != socketId);
+    this.guessOrder = this.guessOrder.filter(x => x != socketId);
 
     return this.players.length == 0;
   }

@@ -15,7 +15,6 @@ const Room = props => {
   let [myTurn, setMyTurn] = useState(false);
   let [myTurnGuess, setMyTurnGuess] = useState(false);
   let [word, setWord] = useState('');
-  let [chat, setChat] = useState([]);
 
   useEffect(() => {
     // TODO: Catch exceptions and probably show some other page
@@ -35,7 +34,10 @@ const Room = props => {
       setStarted(true);
     });
 
-    props.socket.on('players_changed', setPlayers);
+    props.socket.on('players_changed', data => {
+      setPlayers(data);
+      setPaintOrder(list => list.filter(item => data.some(new_player => new_player[0] === item)));
+    });
 
     props.socket.on('round_started', data => {
       setGuesser(data.guesser);
@@ -44,10 +46,7 @@ const Room = props => {
       setMyTurn(false);
       setMyTurnGuess(false);
       setWord(data.word);
-      setChat(curr => curr.concat({ roundStart: true, guesser: data.guesser.slice() }));
     });
-
-    props.socket.on('guess', data => setChat(curr => curr.concat(data)));
 
     props.socket.on('start_draw', data => {
       let { painter: _painter } = data;
@@ -71,7 +70,7 @@ const Room = props => {
         ? <Game socket={props.socket} players={players} selfId={selfId}
             myTurn={myTurn} myTurnGuess={myTurnGuess}
             paintOrder={paintOrder} painter={painter}
-            guesser={guesser} word={word} chat={chat} />
+            guesser={guesser} word={word} />
         : <Lobby socket={props.socket} players={players} selfId={selfId} />
       }
     </div>

@@ -12,6 +12,7 @@ const Game = props => {
   let canvasRef = useRef();
   let [drawTimer, setDrawTimer] = useState(0);
   let [guess, setGuess] = useState('');
+  let [chat, setChat] = useState([]);
 
   async function roundCountdown() {
     for (let i = 3; i > 0; i--) {
@@ -34,21 +35,29 @@ const Game = props => {
   const playerString = (player) => {
     const playerArr = props.players.find(arr => arr[0] === player) || ['', ''];
     return `${playerArr[1]}${(player === props.selfId) ? ' (You)' : ''}`;
-  }
+  };
 
   useEffect(() => {
-    props.socket.on('round_started', data => {
+    const onRoundStart = () => {
       setGuess('');
       roundCountdown();
-    });
+    };
 
-    props.socket.on('start_draw', data => {
+    const onDrawStart = data => {
       let { inkAmount, color } = data;
       canvasRef.current.setInk(inkAmount, color);
       setDrawTimer(5);
-    });
+    };
+
+    props.socket.on('round_started', onRoundStart);
+    props.socket.on('start_draw', onDrawStart);
 
     props.socket.emit('game_loaded');
+
+    return () => {
+      props.socket.off('round_started', onRoundStart);
+      props.socket.off('start_draw', onDrawStart);
+    };
   }, [props.socket, roomId]);
 
   useEffect(() => {
@@ -57,6 +66,26 @@ const Game = props => {
     return () => { workerTimers.clearInterval(interval) };
   }, [drawTimer])
 
+  useEffect(() => {
+    const playerString = (player) => {
+      const playerArr = props.players.find(arr => arr[0] === player) || ['', ''];
+      return `${playerArr[1]}${(player === props.selfId) ? ' (You)' : ''}`;
+    };
+
+    const roundStarted = data =>
+      setChat(curr => curr.concat({ roundStart: true, username: playerString(data.guesser) }));
+    
+    const onGuess = data =>
+      setChat(curr => curr.concat({...data, username: playerString(data.sender)}))
+
+    props.socket.on('round_started', roundStarted);
+    props.socket.on('guess', onGuess);
+
+    return () => {
+      props.socket.off('round_started', roundStarted);
+      props.socket.off('guess', onGuess);
+    };
+  }, [props.players, props.selfId, props.socket, roomId]);
 
   const painterList = props.paintOrder.map((player) => {
     if (player === props.painter) {
@@ -66,13 +95,13 @@ const Game = props => {
     }
   });
 
-  const chat = props.chat.map((message, index) => {
+  const chatList = chat.map((message, index) => {
     if (message.roundStart) {
-      return <small key={index}>Round start: { playerString(message.guesser.slice()) }</small>
+      return <small key={index}>Round start: { message.username }</small>
     } else {
       return  (
         <p key={index} className={message.correct ? 'correct-guess' : ''}>
-          {playerString(message.sender)}: {message.content}
+          {message.username}: {message.content}
         </p>);
     }
   });
@@ -98,7 +127,7 @@ const Game = props => {
             <strong>Guesser</strong>
             <p>{ playerString(props.guesser) }</p>
           </div>
-          <div className="chat-area">{ chat }</div>
+          <div className="chat-area">{ chatList }</div>
           <input type="text" value={ guess }
             onChange={ handleChange } onKeyDown={ handleKeyDown }
             placeholder={props.myTurnGuess ? "Write your guess here" : ""}
