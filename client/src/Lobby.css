@@ -4,11 +4,11 @@
   flex-direction: row;
   justify-content: center;
   height: 500px;
+  gap: 8px;
 }
 
 .lobby-user-list {
   flex-basis: 250px;
-  margin-right: 8px;
   display: flex;
   flex-direction: column;
 }
@@ -38,16 +38,49 @@
 
 .lobby-game-settings {
   flex: 1 1 0;
-  max-width: 600px;
+  flex-basis: 550px;
+  max-width: 550px;
   display: flex;
   flex-direction: column;
 }
 
 .game-settings-area {
   flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 8px;
 }
 
-.start-button-area button {
+.settings-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 420px;
+  gap: 10px;
+}
+
+.setting {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.setting label {
+  font-weight: bold;
+}
+
+.setting input, .setting textarea {
+  max-width: 225px;
+  flex-grow: 1;
+}
+
+.setting textarea {
+  resize: vertical;
+  max-height: 260px;
+}
+
+.start-button-area input {
   display: block;
   margin: auto;
   margin-bottom: 8px;
@@ -60,4 +93,29 @@
   border: 1px solid gray;
   border-radius: 4px;
   padding: 8px 40px;
+}
+
+.start-button-area input[disabled] {
+  box-shadow: none;
+  opacity: .55;
+  cursor: default;
+}
+
+@media only screen and (max-width: 600px) {
+  .lobby {
+    flex-direction: column;
+  }
+
+  .settings-wrapper {
+    gap: 12px;
+  }
+
+  .setting {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .setting input, .setting textarea {
+    max-width: unset;
+  }
 }

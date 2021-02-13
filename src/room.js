@@ -72,6 +72,7 @@ module.exports = class Room {
   }
 
   generateUsername() {
+    // TODO
     return "Generated";
   }
 
@@ -194,6 +195,10 @@ module.exports = class Room {
 
   endRound() {
     console.log("Round end");
+    // TODO: Should send a round end signal with score info,
+    // then wait a few seconds (equal to the time it's shown on client),
+    // Then increment the current round counter, and either start the next round or do some end_game protocol
+
     // TODO: Should probably take parameter for score, e.g. if it was preemptively ended (i.e. no score, maybe skip the popup)
     // TODO: Maybe extra guess time?
     let guesserIndex = this.guessOrder.indexOf(this.guesser);
