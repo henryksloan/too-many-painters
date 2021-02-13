@@ -288,5 +288,6 @@ module.exports = class Room {
       value = Math.max(1, Math.min(60, Number(value) || 1));
     }
     socket.to(this.id).emit('setting_changed', name, value);
+    this.settings = { ...this.settings, [name]: value };
   }
 }

@@ -24,7 +24,6 @@ const Room = props => {
   let [nRounds, setNRounds] = useState(0);
   let [drawTime, setDrawTime] = useState(0);
 
-
   useEffect(() => {
     // TODO: Catch exceptions and probably show some other page
     props.socket.emit('join_room', roomId, localStorage.getItem('username'));
