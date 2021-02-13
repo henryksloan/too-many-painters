@@ -57,17 +57,17 @@ module.exports = class RoomList {
     if (roomId) this.rooms[roomId].playerLoaded(socket.id);
   }
 
-  startRoom(socket) {
+  startRoom(socket, settings) {
     const roomId = this.userRooms[socket.id];
     if (!roomId) {
       socket.emit('exception', {errorMessage: 'User is not in a room'});
       return;
     }
 
-    const success = this.rooms[roomId].gameStart(socket.id);
+    const { success, ...new_settings } = this.rooms[roomId].gameStart(socket.id, settings);
     if (success) {
       console.log('Room started', this.rooms[roomId]);
-      io.to(roomId).emit('room_started');
+      io.to(roomId).emit('room_started', new_settings);
     } else {
       socket.emit('exception', {errorMessage: 'Failed to start room'});
     }

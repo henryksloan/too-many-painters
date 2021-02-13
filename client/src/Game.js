@@ -46,7 +46,7 @@ const Game = props => {
     const onDrawStart = data => {
       let { inkAmount, color } = data;
       canvasRef.current.setInk(inkAmount, color);
-      setDrawTimer(5);
+      setDrawTimer(props.drawTime);
     };
 
     props.socket.on('round_started', onRoundStart);
@@ -58,7 +58,7 @@ const Game = props => {
       props.socket.off('round_started', onRoundStart);
       props.socket.off('start_draw', onDrawStart);
     };
-  }, [props.socket, roomId]);
+  }, [props.drawTime, props.socket, roomId]);
 
   useEffect(() => {
     if (drawTimer <= 0) return;
@@ -109,7 +109,7 @@ const Game = props => {
   return (
     <div className="game">
       <div className="round-area box">
-        <h3>Round x of y</h3>
+        <h3>Round { props.round } of { props.nRounds }</h3>
         <h2>{ props.word }</h2>
         <span></span>
       </div>

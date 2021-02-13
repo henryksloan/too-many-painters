@@ -3,13 +3,13 @@ import './Lobby.css';
 import React, { useEffect, useState } from "react";
 
 const Lobby = props => {
-  const [rounds, setRounds] = useState(10);
+  const [nRounds, setNRounds] = useState(10);
   const [drawTime, setDrawTime] = useState(5);
 
   useEffect(() => {
     const settingChanged = (name, value) => {
-      if (name === 'rounds') setRounds(value);
-      else if (name === 'draw_time') setDrawTime(value);
+      if (name === 'nRounds') setNRounds(value);
+      else if (name === 'drawTime') setDrawTime(value);
     }
 
     props.socket.on('setting_changed', settingChanged);
@@ -29,32 +29,32 @@ const Lobby = props => {
 
   function changeRounds(e) {
     if (e.target.value === '') {
-      setRounds('');
-      props.socket.emit('change_setting', 'rounds', '');
+      setNRounds('');
+      props.socket.emit('change_setting', 'nRounds', '');
       return;
     }
     let { value, min, max } = e.target;
     value = Math.max(Number(min), Math.min(Number(max), Number(value)));
-    setRounds(value);
-    props.socket.emit('change_setting', 'rounds', value);
+    setNRounds(value);
+    props.socket.emit('change_setting', 'nRounds', value);
   }
 
   function changeDrawTime(e) {
     if (e.target.value === '') {
       setDrawTime('');
-      props.socket.emit('change_setting', 'draw_time', '');
+      props.socket.emit('change_setting', 'drawTime', '');
       return;
     }
     let { value, min, max } = e.target;
     value = Math.max(Number(min), Math.min(Number(max), Number(value)));
     setDrawTime(value);
-    props.socket.emit('change_setting', 'draw_time', value);
+    props.socket.emit('change_setting', 'drawTime', value);
   }
 
+  const isLeader = props.players[0] && props.players[0][0] === props.selfId;
   function handleSubmit(e) {
     e.preventDefault();
-    alert("Bla");
-    // onClick={ () => props.socket.emit('start_room') }
+    if (isLeader) props.socket.emit('start_room', { nRounds, drawTime });
   }
 
   function onKeyPress(e) {
@@ -66,7 +66,6 @@ const Lobby = props => {
   const userList = props.players.map(player => (player[0] === props.selfId)
     ? <li key={ player[0] }><strong>{player[1]} (You)</strong></li>
     : <li key={ player[0] }>{player[1]}</li>);
-  const isLeader = props.players[0] && props.players[0][0] === props.selfId;
 
   return (
     <div className="lobby">
@@ -90,7 +89,7 @@ const Lobby = props => {
             <div className="setting">
               <label htmlFor="rounds">Number of rounds</label>
               <input type="number" name="rounds" id="rounds"
-                onChange={ changeRounds } value={ rounds }
+                onChange={ changeRounds } value={ nRounds }
                 min="1" max="30" required disabled={ !isLeader }></input>
             </div>
 
