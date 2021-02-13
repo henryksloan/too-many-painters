@@ -45,6 +45,10 @@ module.exports = class Room {
 
     this.started = false; // False when in lobby, true when on room screen
     this.playStarted = false; // Set to true for an entire game once all players load
+
+    this.round = 1; // 1-indexed
+    this.nRounds = 0; // Same meaning as the frontend - nRounds=5 means round=5 is the last round
+    this.drawTime = 0; // Seconds
   }
 
   getPlayerList() {
@@ -67,15 +71,25 @@ module.exports = class Room {
       playersLoading: this.playersLoading,
       started: this.started, playStarted: this.playStarted,
       guesser: this.guesser, paintOrder: this.paintOrder, painter: this.painter,
-      lines: this.lines, inkAmount: this.inkAmount, color: this.color
+      lines: this.lines, inkAmount: this.inkAmount, color: this.color,
+      round: this.round, nRounds: this.nRounds, drawTime: this.drawTime
     };
+  }
+
+  generateUsername() {
+    // TODO
+    return "Generated";
   }
 
   playerJoin(socket, username) {
     // TODO: Should they be added to guess order?
     this.players.push(socket.id);
     this.sockets[socket.id] = socket;
-    this.usernames[socket.id] = username;
+    if (username && typeof username == "string") {
+      this.usernames[socket.id] = username.substring(0, 13)
+    } else {
+      this.usernames[socket.id] = this.generateUsername();
+    }
     io.to(this.id).emit('players_changed', this.getPlayerList());
   }
 
@@ -88,7 +102,6 @@ module.exports = class Room {
     this.players.splice(index, 1);
     delete this.sockets[socketId];
     delete this.usernames[socketId];
-    this.guessOrder = this.guessOrder.filter(x => x != socketId);
 
     io.to(this.id).emit('players_changed', this.getPlayerList());
     if (wasPainter) {
@@ -96,6 +109,8 @@ module.exports = class Room {
     } else if (wasGuesser) {
       this.endRound(); // TODO: What about score popup? Be careful!
     }
+    this.paintOrder = this.paintOrder.filter(x => x != socketId);
+    this.guessOrder = this.guessOrder.filter(x => x != socketId);
 
     return this.players.length == 0;
   }
@@ -111,8 +126,9 @@ module.exports = class Room {
     }
   }
 
-  gameStart(socketId) {
-    if (this.players[0] != socketId || this.started) return false;
+  gameStart(socketId, settings) {
+    // TODO: Make this work after game has ended once
+    if (this.players[0] != socketId || this.started || !settings) return { success: false };
 
     this.playersLoading = this.players.slice();
 
@@ -130,7 +146,11 @@ module.exports = class Room {
     this.started = true;
     this.playStarted = false;
 
-    return true;
+    this.round = 1;
+    this.nRounds = Math.max(1, Math.min(30, Number(settings.nRounds) || 10));
+    this.drawTime = Math.max(1, Math.min(60, Number(settings.drawTime) || 5));
+
+    return { success: true, nRounds: this.nRounds, drawTime: this.drawTime };
   }
 
   roundStart() {
@@ -141,11 +161,10 @@ module.exports = class Room {
       let word = (player === this.guesser)
         ? this.word.replace(/[^\s]/g, '_')
         : this.word;
-      // io.to(this.id).emit('round_started', {
       this.sockets[player].emit('round_started', {
+        round: this.round, word,
         guesser: this.guesser,
         paintOrder: this.paintOrder,
-        word
       });
     }
     io.to(this.guesser).emit('your_turn_guess');
@@ -154,8 +173,6 @@ module.exports = class Room {
     const context = this.canvas.getContext('2d');
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-    // TODO: Round counter, limit, round times should be in the room object
-    // TODO: Maybe account for latency by adding some time
     setTimeout(() => { this.startDraw() }, 3000);
   }
 
@@ -169,7 +186,7 @@ module.exports = class Room {
       color: this.color
     });
     io.to(this.painter).emit('your_turn');
-    setTimeout(() => { this.timesUp() }, 5000);
+    this.drawTimeout = setTimeout(() => { this.timesUp() }, this.drawTime * 1000);
   }
 
   timesUp() {
@@ -185,17 +202,30 @@ module.exports = class Room {
 
   endRound() {
     console.log("Round end");
+    clearTimeout(this.drawTimeout);
+    // TODO: Should send a round end signal with score info,
+    // then wait a few seconds (equal to the time it's shown on client),
+    // Then increment the current round counter, and either start the next round or do some end_game protocol
+
     // TODO: Should probably take parameter for score, e.g. if it was preemptively ended (i.e. no score, maybe skip the popup)
     // TODO: Maybe extra guess time?
-    let guesserIndex = this.guessOrder.indexOf(this.guesser);
-    if (guesserIndex < this.guessOrder.length - 1) {
-      this.guesser = this.guessOrder[guesserIndex + 1];
+    if (this.round < this.nRounds) {
+      this.round += 1;
+      let nextGuesserIndex = this.guessOrder.indexOf(this.guesser) + 1;
+      this.guesser = this.guessOrder[nextGuesserIndex % this.guessOrder.length];
       this.updatePaintOrder();
       this.roundStart();
     } else {
-      // TODO: What to do when number of rounds exceeds number of players to guess? Probably just loop through.
-      console.log("Game end?")
+      this.endGame();
     }
+  }
+
+  endGame() {
+    console.log("Game end");
+    this.started = false;
+    this.playStarted = false;
+    this.playersLoading = [];
+    io.to(this.id).emit('game_ended');
   }
 
   draw(socketId, coords) {
@@ -240,5 +270,23 @@ module.exports = class Room {
       console.log("Correct!");
       this.endRound();
     }
+  }
+
+  changeUsername(socketId, username) {
+    if (username && typeof username == "string" && !this.started) {
+      this.usernames[socketId] = username.substring(0, 13);
+      io.to(this.id).emit('players_changed', this.getPlayerList());
+    }
+  }
+
+  changeSetting(socket, name, value) {
+    if (this.players[0] !== socket.id || this.started) return;
+
+    if (name === "nRounds" && value !== '') {
+      value = Math.max(1, Math.min(30, Number(value) || 1));
+    } else if (name === "drawTime" && value !== '') {
+      value = Math.max(1, Math.min(60, Number(value) || 1));
+    }
+    socket.to(this.id).emit('setting_changed', name, value);
   }
 }

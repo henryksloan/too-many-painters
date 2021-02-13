@@ -3,10 +3,39 @@
 }
 
 .App-header img {
-  max-width: 600px;
+  max-width: 100%;
+  height: auto;
+  max-height: 87px;
 }
 
 body {
   background: url('assets/bg.png');
   background-size: 256px;
+}
+
+.box {
+  box-shadow: 0 0 4px 0 rgb(0 0 0 / 50%);
+  border-radius: 4px;
+  text-align: left;
+  background-color: #fefefe;
+}
+
+.box-header {
+  text-align: center;
+  border-radius: 4px 4px 0 0;
+  min-height: 50px;
+  background-color: #eeeeee;
+  border-bottom: 1px solid lightgray;
+}
+
+.box-footer {
+  text-align: center;
+  border-radius: 0 0 4px 4px;
+  min-height: 50px;
+  background-color: #eeeeee;
+  border-top: 1px solid lightgray;
+}
+
+.box-header h2 {
+  margin: 0;
 }

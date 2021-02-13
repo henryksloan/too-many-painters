@@ -1,0 +1,42 @@
+.home-panel {
+  margin: auto;
+  max-width: 480px;
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-panel .username-input {
+  font-size: 1.0em;
+  border: 1px solid gray;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.home-panel .create-room-button {
+  cursor: pointer;
+  background-color: mediumseagreen;
+  color: white;
+  font-weight: bold;
+  font-size: 1.0em;
+  border: 1px solid gray;
+  border-radius: 4px;
+  padding: 8px 65px;
+}
+
+.home-panel h2 {
+  margin: 0;
+  text-decoration: underline;
+}
+
+.home-panel ul {
+  margin: 4px;
+  text-align: left;
+}
+
+.home-panel li {
+  margin-bottom: 3px;
+}
