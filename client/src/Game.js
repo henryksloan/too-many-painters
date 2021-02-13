@@ -25,7 +25,7 @@ const Game = props => {
   }
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Enter' && event.target.value.length > 0) {
+    if (event.key === 'Enter' && event.target.value.length > 0 && drawTimer > 0) {
       props.socket.emit('guess', event.target.value);
       setGuess('');
     }
@@ -40,6 +40,7 @@ const Game = props => {
   useEffect(() => {
     const onRoundStart = () => {
       setGuess('');
+      setDrawTimer(0);
       roundCountdown();
     };
 

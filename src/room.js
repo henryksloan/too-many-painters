@@ -127,6 +127,7 @@ module.exports = class Room {
   }
 
   gameStart(socketId, settings) {
+    // TODO: Make this work after game has ended once
     if (this.players[0] != socketId || this.started || !settings) return { success: false };
 
     this.playersLoading = this.players.slice();
@@ -185,7 +186,7 @@ module.exports = class Room {
       color: this.color
     });
     io.to(this.painter).emit('your_turn');
-    setTimeout(() => { this.timesUp() }, this.drawTime * 1000);
+    this.drawTimeout = setTimeout(() => { this.timesUp() }, this.drawTime * 1000);
   }
 
   timesUp() {
@@ -201,6 +202,7 @@ module.exports = class Room {
 
   endRound() {
     console.log("Round end");
+    clearTimeout(this.drawTimeout);
     // TODO: Should send a round end signal with score info,
     // then wait a few seconds (equal to the time it's shown on client),
     // Then increment the current round counter, and either start the next round or do some end_game protocol
