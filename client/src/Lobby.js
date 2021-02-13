@@ -1,10 +1,23 @@
 import './Lobby.css';
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const Lobby = props => {
   const [rounds, setRounds] = useState(10);
   const [drawTime, setDrawTime] = useState(5);
+
+  useEffect(() => {
+    const settingChanged = (name, value) => {
+      if (name === 'rounds') setRounds(value);
+      else if (name === 'draw_time') setDrawTime(value);
+    }
+
+    props.socket.on('setting_changed', settingChanged);
+
+    return () => {
+      props.socket.off('setting_changed', settingChanged);
+    };
+  }, [props.players, props.selfId, props.socket]);
 
   function changeUsername() {
     const username = prompt("Choose your new username");
@@ -17,21 +30,25 @@ const Lobby = props => {
   function changeRounds(e) {
     if (e.target.value === '') {
       setRounds('');
+      props.socket.emit('change_setting', 'rounds', '');
       return;
     }
     let { value, min, max } = e.target;
     value = Math.max(Number(min), Math.min(Number(max), Number(value)));
     setRounds(value);
+    props.socket.emit('change_setting', 'rounds', value);
   }
 
   function changeDrawTime(e) {
     if (e.target.value === '') {
       setDrawTime('');
+      props.socket.emit('change_setting', 'draw_time', '');
       return;
     }
     let { value, min, max } = e.target;
     value = Math.max(Number(min), Math.min(Number(max), Number(value)));
     setDrawTime(value);
+    props.socket.emit('change_setting', 'draw_time', value);
   }
 
   function handleSubmit(e) {

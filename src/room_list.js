@@ -99,4 +99,13 @@ module.exports = class RoomList {
       this.rooms[roomId].changeUsername(socket.id, username);
     }
   }
+
+  changeSetting(socket, name, value) {
+    const roomId = this.userRooms[socket.id];
+    if (!roomId) {
+      socket.emit('exception', {errorMessage: 'User is not in a room'});
+    } else {
+      this.rooms[roomId].changeSetting(socket, name, value);
+    }
+  }
 }

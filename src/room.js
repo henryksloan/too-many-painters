@@ -262,4 +262,15 @@ module.exports = class Room {
       io.to(this.id).emit('players_changed', this.getPlayerList());
     }
   }
+
+  changeSetting(socket, name, value) {
+    if (this.players[0] !== socket.id || this.started) return;
+
+    if (name === "rounds" && value !== '') {
+      value = Math.max(1, Math.min(30, Number(value) || 1));
+    } else if (name === "draw_time" && value !== '') {
+      value = Math.max(1, Math.min(60, Number(value) || 1));
+    }
+    socket.to(this.id).emit('setting_changed', name, value);
+  }
 }

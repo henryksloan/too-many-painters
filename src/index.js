@@ -23,4 +23,5 @@ io.on('connection', (socket) => {
   socket.on('draw', coords => roomList.draw(socket, coords));
   socket.on('guess', str => roomList.guess(socket, str));
   socket.on('change_username', username => roomList.changeUsername(socket, username));
+  socket.on('change_setting', (name, value) => roomList.changeSetting(socket, name, value));
 });
