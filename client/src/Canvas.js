@@ -106,16 +106,19 @@ const Canvas = forwardRef((props, ref) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    props.socket.on('draw', data => {
+    const onDraw = data => {
       drawLine(context, data.coords, data.color);
       setInkAmount(data.inkAmount);
-    });
+    };
 
-    props.socket.on('initialize', room => {
+    const onInitialize = room => {
       for (let data of room.lines) {
         drawLine(context, data.line, data.color);
       }
-    });
+    };
+
+    props.socket.on('draw', onDraw);
+    props.socket.on('initialize', onInitialize);
 
     canvas.addEventListener("mousedown", function (e) {
       setPenDown(true);
@@ -154,7 +157,10 @@ const Canvas = forwardRef((props, ref) => {
       canvas.dispatchEvent(mouseEvent);
     });
 
-    return () => { props.socket.removeAllListeners() };
+    return () => {
+      props.socket.off('draw', onDraw);
+      props.socket.off('initialize', onInitialize);
+    };
   }, [canvasRef, props.socket]);
   
   return (

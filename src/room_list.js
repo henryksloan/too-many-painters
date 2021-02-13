@@ -48,6 +48,7 @@ module.exports = class RoomList {
     const roomId = this.userRooms[socket.id];
     console.log(`${socket.id} leaving ${roomId}`);
     if (roomId) {
+      socket.leave(roomId);
       const roomEmpty = this.rooms[roomId].playerLeave(socket.id);
       if (roomEmpty) {
         console.log(`deleting room ${roomId}`);

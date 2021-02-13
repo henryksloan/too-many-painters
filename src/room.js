@@ -104,13 +104,15 @@ module.exports = class Room {
     delete this.usernames[socketId];
 
     io.to(this.id).emit('players_changed', this.getPlayerList());
-    if (wasPainter) {
-      this.timesUp(); // TODO: What about score popup? Be careful!
-    } else if (wasGuesser) {
-      this.endRound(); // TODO: What about score popup? Be careful!
+    if (this.playStarted) {
+      if (wasPainter) {
+        this.timesUp(); // TODO: What about score popup? Be careful!
+      } else if (wasGuesser) {
+        this.endRound(); // TODO: What about score popup? Be careful!
+      }
+      this.paintOrder = this.paintOrder.filter(x => x != socketId);
+      this.guessOrder = this.guessOrder.filter(x => x != socketId);
     }
-    this.paintOrder = this.paintOrder.filter(x => x != socketId);
-    this.guessOrder = this.guessOrder.filter(x => x != socketId);
 
     return this.players.length == 0;
   }
