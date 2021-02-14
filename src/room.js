@@ -3,7 +3,7 @@ const { shuffle } = require('./helpers.js');
 const { createCanvas } = require('canvas');
 
 const inkMax = 100, inkMin = 35;
-const pixelsPerPercent = 2;
+const pixelsPerPercent = 50;
 // TODO: Should white be here as a funny eraser? Maybe make it rare and special on the frontend (like an eraser)?
 const colors = ['red', 'blue', 'green', 'black', 'cyan', 'darkred', 'darkgreen', 'yellow', 'orange', 'gray', 'purple', 'pink'];
 const words = 
