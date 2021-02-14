@@ -107,6 +107,29 @@ canvas {
   height: 440px;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.guesser-area input {
+  margin: 4px;
+  padding: 4px;
+}
+
+.scroll-bottom-button {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+
+  font-size: 1.4em;
+  font-weight: bold;
+  font-family: monospace;
+  border-radius: 50%;
+  border: 1px solid darkgray;
+  background-color: dodgerblue;
+  color: white;
 }
 
 .guesser-name p {
@@ -131,9 +154,4 @@ canvas {
 .chat-area small {
   display: block;
   margin: 8px 0 2px 0;
-}
-
-.guesser-area input {
-  margin: 4px;
-  padding: 4px;
 }

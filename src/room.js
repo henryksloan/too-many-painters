@@ -143,7 +143,8 @@ module.exports = class Room {
     this.inkAmount = 0;
     this.color = '';
     const context = this.canvas.getContext('2d');
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
     this.started = true;
     this.playStarted = false;
@@ -173,7 +174,7 @@ module.exports = class Room {
 
     this.lines = [];
     const context = this.canvas.getContext('2d');
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
     setTimeout(() => { this.startDraw() }, 3000);
   }
