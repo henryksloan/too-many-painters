@@ -10,9 +10,11 @@ import Canvas from './Canvas';
 const Game = props => {
   let { roomId } = useParams();
   let canvasRef = useRef();
+  let chatRef = useRef();
   let [drawTimer, setDrawTimer] = useState(0);
   let [guess, setGuess] = useState('');
   let [chat, setChat] = useState([]);
+  let [chatScrolledBottom, setChatScrolledBottom] = useState(true);
 
   async function roundCountdown() {
     for (let i = 3; i > 0; i--) {
@@ -37,7 +39,19 @@ const Game = props => {
     return `${playerArr[1]}${(player === props.selfId) ? ' (You)' : ''}`;
   };
 
+  const checkChatScrolledBottom = () => {
+    const curr = chatRef.current;
+    return curr && (curr.scrollHeight - curr.clientHeight <= curr.scrollTop + 1);
+  };
+
+  const scrollChatToBottom = () => {
+    const curr = chatRef.current;
+    setChatScrolledBottom(true); 
+    if (curr) curr.scrollTop = curr.scrollHeight - curr.clientHeight;
+  };
+
   useEffect(() => {
+    const onGameStart = () => setChat([]);
     const onRoundStart = () => {
       setGuess('');
       setDrawTimer(0);
@@ -50,12 +64,14 @@ const Game = props => {
       setDrawTimer(props.drawTime);
     };
 
+    props.socket.on('room_started', onGameStart);
     props.socket.on('round_started', onRoundStart);
     props.socket.on('start_draw', onDrawStart);
 
     props.socket.emit('game_loaded');
 
     return () => {
+      props.socket.off('room_started', onGameStart);
       props.socket.off('round_started', onRoundStart);
       props.socket.off('start_draw', onDrawStart);
     };
@@ -87,6 +103,11 @@ const Game = props => {
       props.socket.off('guess', onGuess);
     };
   }, [props.players, props.selfId, props.socket, roomId]);
+
+  useEffect(() => {
+    if (chatScrolledBottom) scrollChatToBottom();
+  }, [chat, chatScrolledBottom])
+
 
   const painterList = props.paintOrder.map((player) => {
     if (player === props.painter) {
@@ -121,14 +142,22 @@ const Game = props => {
           </div>
           <ol>{ painterList }</ol>
         </div>
+
         <Canvas ref={ canvasRef } socket={ props.socket }
           drawTimer={ drawTimer} myTurn={ props.myTurn } />
+
         <div className="guesser-area box">
           <div className="guesser-name box-header">
             <strong>Guesser</strong>
             <p>{ playerString(props.guesser) }</p>
           </div>
-          <div className="chat-area">{ chatList }</div>
+          <div className="chat-area" ref={ chatRef }
+            onScroll={ () => setChatScrolledBottom(checkChatScrolledBottom()) }>
+            { chatList }
+          </div>
+          { chatScrolledBottom ||
+            <button onClick={ scrollChatToBottom }
+              className="scroll-bottom-button">↓</button> }
           <input type="text" value={ guess }
             onChange={ handleChange } onKeyDown={ handleKeyDown }
             placeholder={props.myTurnGuess ? "Write your guess here" : ""}

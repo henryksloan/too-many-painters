@@ -118,4 +118,14 @@
   .setting input, .setting textarea {
     max-width: unset;
   }
+
+  .lobby-game-settings {
+    flex-basis: unset;
+  }
+}
+
+@media only screen and (max-height: 500px) {
+  .lobby {
+    height: unset;
+  }
 }

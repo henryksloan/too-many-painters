@@ -40,3 +40,9 @@
 .home-panel li {
   margin-bottom: 3px;
 }
+
+@media only screen and (max-height: 500px) {
+  .home-panel {
+    max-width: unset;
+  }
+}

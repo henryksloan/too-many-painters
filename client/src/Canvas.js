@@ -2,8 +2,6 @@ import React, { forwardRef, useImperativeHandle, useRef, useEffect, useState } f
 
 import * as workerTimers from 'worker-timers';
 
-// const pixels_per_percent = 10;
-
 function drawLine(context, coords, color) {
   if (color) context.strokeStyle = color;
   // TODO: Only partially draw lines that would exceed inkAmount
@@ -74,41 +72,45 @@ const Canvas = forwardRef((props, ref) => {
   }));
 
   const mouseMove = (e) => {
-    // TODO: This is serverside to ensure consistency - make it more responsive by making the visuals clientside
-    const canvas = canvasRef.current;
-    // const context = canvas.getContext('2d');
-
     if (!penDown || !props.myTurn || inkAmount <= 0) return;
-    let x2 = e.clientX - canvas.offsetLeft;
-    let y2 = e.clientY - canvas.offsetTop;
+
+    const canvas = canvasRef.current;
+    let x2 = e.pageX - canvas.offsetLeft;
+    let y2 = e.pageY - canvas.offsetTop;
     props.socket.emit('draw', [x1, y1, x2, y2]);
-    // let data1 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-    // drawLine(context, [x1, y1, x2, y2]);
-    // let data2 = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-    // let pixels_changed = 0;
-    // // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding
-    // for (let i = 0; i < data1.data.length; i += 4) {
-    //   for (let j = 0; j < 3; j++) {
-    //     if (data1.data[i+j] !== data2.data[i+j]) {
-    //       pixels_changed += 1;
-    //       break;
-    //     }
-    //   }
-    // }
-    // setInkAmount(amount => amount - (pixels_changed / pixels_per_percent));
     setX1(x2);
     setY1(y2);
   };
+  const mouseDown = (e) => {
+    const canvas = canvasRef.current;
+    setPenDown(true);
+    setX1(e.pageX - canvas.offsetLeft)
+    setY1(e.pageY - canvas.offsetTop)
+  };
+  const mouseUp = (e) => {
+    setPenDown(false);
+  };
+  const mouseOut = (e) => {
+    setPenDown(false);
+  };
 
   const touchMove = (e) => {
-    // TODO: It seems this (and perhaps touchStart) need to take into account scroll/zoom
     var touch = e.touches[0];
-    var mouseEvent = new MouseEvent("mousemove", {
-      clientX: touch.clientX,
-      clientY: touch.clientY,
+    mouseMove({
+      pageX: touch.pageX,
+      pageY: touch.pageY,
     });
-    mouseMove(mouseEvent);
   }
+  const touchStart = (e) => {
+    var touch = e.touches[0];
+    mouseDown({
+      pageX: touch.pageX,
+      pageY: touch.pageY,
+    });
+  };
+  const touchEnd = (e) => {
+    mouseUp();
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -128,33 +130,6 @@ const Canvas = forwardRef((props, ref) => {
     props.socket.on('draw', onDraw);
     props.socket.on('initialize', onInitialize);
 
-    canvas.addEventListener("mousedown", function (e) {
-      setPenDown(true);
-      setX1(e.clientX - canvas.offsetLeft)
-      setY1(e.clientY - canvas.offsetTop)
-    }, false);
-    canvas.addEventListener("mouseup", function (e) {
-      setPenDown(false);
-    }, false);
-    canvas.addEventListener("mouseout", function (e) {
-      setPenDown(false);
-    }, false);
-
-    canvas.addEventListener("touchstart", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var touch = e.touches[0];
-      var mouseEvent = new MouseEvent("mousedown", {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-      });
-      canvas.dispatchEvent(mouseEvent);
-    }, false);
-    canvas.addEventListener("touchend", function (e) {
-      var mouseEvent = new MouseEvent("mouseup", {});
-      canvas.dispatchEvent(mouseEvent);
-    });
-
     return () => {
       props.socket.off('draw', onDraw);
       props.socket.off('initialize', onInitialize);
@@ -163,8 +138,10 @@ const Canvas = forwardRef((props, ref) => {
   
   return (
     <div className="draw-area">
-      <canvas ref={canvasRef} onMouseMove={ mouseMove }
-        onTouchMove={ touchMove } width="500" height="400" />
+      <canvas ref={canvasRef}
+        onMouseDown={mouseDown} onMouseUp={mouseUp} onMouseMove={mouseMove} onMouseOut={mouseOut}
+        onTouchStart={touchStart} onTouchEnd={touchEnd} onTouchMove={touchMove}
+        width="500" height="400" />
       <div className="draw-info box">
         <h3>{ props.drawTimer }</h3>
         <progress value={ inkAmount } max="100" className={ inkColor }>{ inkAmount }%</progress>
