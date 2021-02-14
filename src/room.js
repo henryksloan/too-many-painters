@@ -129,7 +129,6 @@ module.exports = class Room {
   }
 
   gameStart(socketId, settings) {
-    // TODO: Make this work after game has ended once
     if (this.players[0] != socketId || this.started || !settings) return { success: false };
 
     this.playersLoading = this.players.slice();

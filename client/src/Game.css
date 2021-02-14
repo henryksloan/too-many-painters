@@ -1,5 +1,6 @@
 canvas {
   background: white;
+  touch-action: none;
 }
 
 .game-area {
