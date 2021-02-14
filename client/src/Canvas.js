@@ -78,8 +78,6 @@ const Canvas = forwardRef((props, ref) => {
     const canvas = canvasRef.current;
     // const context = canvas.getContext('2d');
 
-    e.preventDefault();
-    e.stopPropagation();
     if (!penDown || !props.myTurn || inkAmount <= 0) return;
     let x2 = e.clientX - canvas.offsetLeft;
     let y2 = e.clientY - canvas.offsetTop;
@@ -101,6 +99,16 @@ const Canvas = forwardRef((props, ref) => {
     setX1(x2);
     setY1(y2);
   };
+
+  const touchMove = (e) => {
+    // TODO: It seems this (and perhaps touchStart) need to take into account scroll/zoom
+    var touch = e.touches[0];
+    var mouseEvent = new MouseEvent("mousemove", {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    });
+    mouseMove(mouseEvent);
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -142,16 +150,6 @@ const Canvas = forwardRef((props, ref) => {
       });
       canvas.dispatchEvent(mouseEvent);
     }, false);
-    canvas.addEventListener("touchmove", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var touch = e.touches[0];
-      var mouseEvent = new MouseEvent("mousemove", {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-      });
-      canvas.dispatchEvent(mouseEvent);
-    }, false);
     canvas.addEventListener("touchend", function (e) {
       var mouseEvent = new MouseEvent("mouseup", {});
       canvas.dispatchEvent(mouseEvent);
@@ -165,7 +163,8 @@ const Canvas = forwardRef((props, ref) => {
   
   return (
     <div className="draw-area">
-      <canvas ref={canvasRef} onMouseMove={ mouseMove } width="500" height="400" />
+      <canvas ref={canvasRef} onMouseMove={ mouseMove }
+        onTouchMove={ touchMove } width="500" height="400" />
       <div className="draw-info box">
         <h3>{ props.drawTimer }</h3>
         <progress value={ inkAmount } max="100" className={ inkColor }>{ inkAmount }%</progress>
