@@ -37,12 +37,18 @@ module.exports = class RoomList {
     this.userRooms[socket.id] = roomId;
     this.rooms[roomId].playerJoin(socket, username);
     socket.emit('room_joined', { ...this.rooms[roomId].getPublicData(), selfId: socket.id });
+    if (this.rooms[roomId].settings && !this.rooms[roomId].started) {
+      for (let setting of Object.entries(this.rooms[roomId].settings)) {
+        socket.emit('setting_changed', setting[0], setting[1]);
+      }
+    }
   }
 
   leaveRoom(socket) {
     const roomId = this.userRooms[socket.id];
     console.log(`${socket.id} leaving ${roomId}`);
     if (roomId) {
+      socket.leave(roomId);
       const roomEmpty = this.rooms[roomId].playerLeave(socket.id);
       if (roomEmpty) {
         console.log(`deleting room ${roomId}`);

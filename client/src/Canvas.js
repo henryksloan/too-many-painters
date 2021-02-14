@@ -78,8 +78,6 @@ const Canvas = forwardRef((props, ref) => {
     const canvas = canvasRef.current;
     // const context = canvas.getContext('2d');
 
-    e.preventDefault();
-    e.stopPropagation();
     if (!penDown || !props.myTurn || inkAmount <= 0) return;
     let x2 = e.clientX - canvas.offsetLeft;
     let y2 = e.clientY - canvas.offsetTop;
@@ -102,20 +100,33 @@ const Canvas = forwardRef((props, ref) => {
     setY1(y2);
   };
 
+  const touchMove = (e) => {
+    // TODO: It seems this (and perhaps touchStart) need to take into account scroll/zoom
+    var touch = e.touches[0];
+    var mouseEvent = new MouseEvent("mousemove", {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    });
+    mouseMove(mouseEvent);
+  }
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    props.socket.on('draw', data => {
+    const onDraw = data => {
       drawLine(context, data.coords, data.color);
       setInkAmount(data.inkAmount);
-    });
+    };
 
-    props.socket.on('initialize', room => {
+    const onInitialize = room => {
       for (let data of room.lines) {
         drawLine(context, data.line, data.color);
       }
-    });
+    };
+
+    props.socket.on('draw', onDraw);
+    props.socket.on('initialize', onInitialize);
 
     canvas.addEventListener("mousedown", function (e) {
       setPenDown(true);
@@ -139,27 +150,21 @@ const Canvas = forwardRef((props, ref) => {
       });
       canvas.dispatchEvent(mouseEvent);
     }, false);
-    canvas.addEventListener("touchmove", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var touch = e.touches[0];
-      var mouseEvent = new MouseEvent("mousemove", {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-      });
-      canvas.dispatchEvent(mouseEvent);
-    }, false);
     canvas.addEventListener("touchend", function (e) {
       var mouseEvent = new MouseEvent("mouseup", {});
       canvas.dispatchEvent(mouseEvent);
     });
 
-    return () => { props.socket.removeAllListeners() };
+    return () => {
+      props.socket.off('draw', onDraw);
+      props.socket.off('initialize', onInitialize);
+    };
   }, [canvasRef, props.socket]);
   
   return (
     <div className="draw-area">
-      <canvas ref={canvasRef} onMouseMove={ mouseMove } width="500" height="400" />
+      <canvas ref={canvasRef} onMouseMove={ mouseMove }
+        onTouchMove={ touchMove } width="500" height="400" />
       <div className="draw-info box">
         <h3>{ props.drawTimer }</h3>
         <progress value={ inkAmount } max="100" className={ inkColor }>{ inkAmount }%</progress>

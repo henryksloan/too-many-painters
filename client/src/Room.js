@@ -24,7 +24,6 @@ const Room = props => {
   let [nRounds, setNRounds] = useState(0);
   let [drawTime, setDrawTime] = useState(0);
 
-
   useEffect(() => {
     // TODO: Catch exceptions and probably show some other page
     props.socket.emit('join_room', roomId, localStorage.getItem('username'));
@@ -43,7 +42,6 @@ const Room = props => {
     });
 
     props.socket.on('room_started', settings => {
-      console.log("Started", settings);
       setNRounds(settings.nRounds);
       setDrawTime(settings.drawTime);
       setStarted(true);
@@ -78,7 +76,6 @@ const Room = props => {
     props.socket.on('your_turn_guess', () => setMyTurnGuess(true));
 
     return () => {
-      console.log("Oh no!");
       props.socket.emit('leave_room');
       props.socket.removeAllListeners();
     };
