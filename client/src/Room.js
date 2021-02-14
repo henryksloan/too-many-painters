@@ -42,7 +42,6 @@ const Room = props => {
     });
 
     props.socket.on('room_started', settings => {
-      console.log("Started", settings);
       setNRounds(settings.nRounds);
       setDrawTime(settings.drawTime);
       setStarted(true);
@@ -77,7 +76,6 @@ const Room = props => {
     props.socket.on('your_turn_guess', () => setMyTurnGuess(true));
 
     return () => {
-      console.log("Oh no!");
       props.socket.emit('leave_room');
       props.socket.removeAllListeners();
     };

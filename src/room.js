@@ -3,7 +3,7 @@ const { shuffle } = require('./helpers.js');
 const { createCanvas } = require('canvas');
 
 const inkMax = 100, inkMin = 35;
-const pixelsPerPercent = 10;
+const pixelsPerPercent = 50;
 // TODO: Should white be here as a funny eraser? Maybe make it rare and special on the frontend (like an eraser)?
 const colors = ['red', 'blue', 'green', 'black', 'cyan', 'darkred', 'darkgreen', 'yellow', 'orange', 'gray', 'purple', 'pink'];
 const words = 
@@ -82,7 +82,7 @@ module.exports = class Room {
   }
 
   playerJoin(socket, username) {
-    // TODO: Should they be added to guess order?
+    // TODO: Should they be added to guess order? I think so
     this.players.push(socket.id);
     this.sockets[socket.id] = socket;
     if (username && typeof username == "string") {
@@ -245,6 +245,7 @@ module.exports = class Room {
     context.stroke();
     context.closePath();
 
+    // TODO: Make sure the background fill color doesn't interfere with this -- is it black for some reason?
     let after = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
     let pixelsChanged = 0;
     // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding
