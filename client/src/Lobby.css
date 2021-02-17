@@ -80,6 +80,23 @@
   max-height: 260px;
 }
 
+.custom-rounds-area {
+  border: 1px solid gray;
+  padding: 2px;
+}
+
+.custom-round-settings {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.custom-rounds-area #custom-rounds {
+  flex-grow: unset;
+  margin-right: 8px;
+}
+
 .start-button-area input {
   display: block;
   margin: auto;
