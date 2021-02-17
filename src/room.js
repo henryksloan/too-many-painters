@@ -2,7 +2,6 @@ const { io } = require('./app.js');
 const { shuffle } = require('./helpers.js');
 const { createCanvas } = require('canvas');
 
-const inkMax = 100, inkMin = 35;
 const pixelsPerPercent = 50;
 // TODO: Should white be here as a funny eraser? Maybe make it rare and special on the frontend (like an eraser)?
 const colors = ['red', 'blue', 'green', 'black', 'cyan', 'darkred', 'darkgreen', 'yellow', 'orange', 'gray', 'purple', 'pink'];
@@ -48,7 +47,9 @@ module.exports = class Room {
 
     this.round = 1; // 1-indexed
     this.nRounds = 0; // Same meaning as the frontend - nRounds=5 means round=5 is the last round
-    this.drawTime = 0; // Seconds
+    this.drawTime = null;
+    this.minimumInk = null;
+    this.maximumInk = null;
   }
 
   getPlayerList() {
@@ -82,7 +83,6 @@ module.exports = class Room {
   }
 
   playerJoin(socket, username) {
-    // TODO: Should they be added to guess order? I think so
     this.players.push(socket.id);
     this.sockets[socket.id] = socket;
     if (username && typeof username == "string") {
@@ -91,6 +91,12 @@ module.exports = class Room {
       this.usernames[socket.id] = this.generateUsername();
     }
     io.to(this.id).emit('players_changed', this.getPlayerList());
+
+    // Add them to the guess order before the current guesser
+    if (this.playStarted) {
+      let guesserIndex = this.guessOrder.indexOf(this.guesser);
+      this.guessOrder.splice(guesserIndex, 0, socket.id);
+    }
   }
 
   // Returns true if the room is now empty
@@ -150,13 +156,38 @@ module.exports = class Room {
 
     this.round = 1;
     this.nRounds = Math.max(1, Math.min(30, Number(settings.nRounds) || 10));
-    this.drawTime = Math.max(1, Math.min(60, Number(settings.drawTime) || 5));
+
+    // If kept null, these round settings are set dynamically per-round
+    this.drawTime = null;
+    this.minimumInk = null;
+    this.maximumInk = null;
+
+    this.customRounds = settings.customRounds;
+    if (settings.customRounds) {
+      this.drawTime = Math.max(1, Math.min(60, Number(settings.drawTime) || 10));
+
+      let _minimumInk = Number(settings.minimumInk);
+      if (isNaN(_minimumInk)) _minimumInk = 35;
+      this.minimumInk = Math.max(0, Math.min(100, _minimumInk));
+
+      let _maximumInk = Number(settings.maximumInk);
+      if (isNaN(_maximumInk)) _maximumInk = 100;
+      this.maximumInk = Math.max(0, Math.min(100, _maximumInk));
+
+      if (this.maximumInk < this.minimumInk) [this.maximumInk, this.minimumInk] = [this.minimumInk, this.maximumInk]
+    }
 
     return { success: true, nRounds: this.nRounds, drawTime: this.drawTime };
   }
 
   roundStart() {
     console.log("Round started");
+
+    if (!this.customRounds) {
+      this.drawTime = Math.ceil(30 / this.players.length);
+      this.minimumInk = Math.max(35, 95 - (15 * this.players.length));
+      this.maximumInk = 100;
+    }
 
     this.word = words[Math.floor(Math.random() * words.length)];
     for (let player of this.players) {
@@ -167,6 +198,7 @@ module.exports = class Room {
         round: this.round, word,
         guesser: this.guesser,
         paintOrder: this.paintOrder,
+        drawTime: this.drawTime,
       });
     }
     io.to(this.guesser).emit('your_turn_guess');
@@ -179,7 +211,7 @@ module.exports = class Room {
   }
 
   startDraw() {
-    this.inkAmount = Math.floor(Math.random() * ((inkMax + 1) - inkMin) + inkMin);
+    this.inkAmount = Math.floor(Math.random() * ((this.maximumInk + 1) - this.minimumInk) + this.minimumInk);
     this.color = colors[Math.floor(Math.random() * colors.length)];
 
     io.to(this.id).emit('start_draw', {
@@ -245,7 +277,6 @@ module.exports = class Room {
     context.stroke();
     context.closePath();
 
-    // TODO: Make sure the background fill color doesn't interfere with this -- is it black for some reason?
     let after = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
     let pixelsChanged = 0;
     // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding
@@ -289,6 +320,10 @@ module.exports = class Room {
       value = Math.max(1, Math.min(30, Number(value) || 1));
     } else if (name === "drawTime" && value !== '') {
       value = Math.max(1, Math.min(60, Number(value) || 1));
+    } else if (name === "minimumInk" && value !== '') {
+      value = Math.max(0, Math.min(100, Number(value) || 1));
+    } else if (name === "maximumInk" && value !== '') {
+      value = Math.max(0, Math.min(100, Number(value) || 1));
     }
     socket.to(this.id).emit('setting_changed', name, value);
     this.settings = { ...this.settings, [name]: value };
