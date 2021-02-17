@@ -6,7 +6,7 @@ const Lobby = props => {
   const [nRounds, setNRounds] = useState(10);
 
   const [customRounds, setCustomRounds] = useState(false);
-  const [drawTime, setDrawTime] = useState(5);
+  const [drawTime, setDrawTime] = useState(10);
   const [minimumInk, setMinimumInk] = useState(35);
   const [maximumInk, setMaximumInk] = useState(100);
 

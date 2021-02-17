@@ -47,9 +47,9 @@ module.exports = class Room {
 
     this.round = 1; // 1-indexed
     this.nRounds = 0; // Same meaning as the frontend - nRounds=5 means round=5 is the last round
-    this.drawTime = 0; // Seconds
-    this.minimumInk = 0;
-    this.maximumInk = 0;
+    this.drawTime = null;
+    this.minimumInk = null;
+    this.maximumInk = null;
   }
 
   getPlayerList() {
@@ -151,13 +151,15 @@ module.exports = class Room {
 
     this.round = 1;
     this.nRounds = Math.max(1, Math.min(30, Number(settings.nRounds) || 10));
-    this.drawTime = 5;
-    this.minimumInk = 35; // TODO: These two should depend on the number of players... should they change when players join/leave?
-    this.maximumInk = 100;
 
-    console.log("Blub", settings);
+    // If kept null, these round settings are set dynamically per-round
+    this.drawTime = null;
+    this.minimumInk = null;
+    this.maximumInk = null;
+
+    this.customRounds = settings.customRounds;
     if (settings.customRounds) {
-      this.drawTime = Math.max(1, Math.min(60, Number(settings.drawTime) || 5));
+      this.drawTime = Math.max(1, Math.min(60, Number(settings.drawTime) || 10));
 
       let _minimumInk = Number(settings.minimumInk);
       if (isNaN(_minimumInk)) _minimumInk = 35;
@@ -176,6 +178,12 @@ module.exports = class Room {
   roundStart() {
     console.log("Round started");
 
+    if (!this.customRounds) {
+      this.drawTime = Math.ceil(30 / this.players.length);
+      this.minimumInk = Math.max(35, 95 - (15 * this.players.length));
+      this.maximumInk = 100;
+    }
+
     this.word = words[Math.floor(Math.random() * words.length)];
     for (let player of this.players) {
       let word = (player === this.guesser)
@@ -185,6 +193,7 @@ module.exports = class Room {
         round: this.round, word,
         guesser: this.guesser,
         paintOrder: this.paintOrder,
+        drawTime: this.drawTime,
       });
     }
     io.to(this.guesser).emit('your_turn_guess');
@@ -263,7 +272,6 @@ module.exports = class Room {
     context.stroke();
     context.closePath();
 
-    // TODO: Make sure the background fill color doesn't interfere with this -- is it black for some reason?
     let after = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
     let pixelsChanged = 0;
     // TODO: In principle, this should only have to check an area enclosing the two points, with sufficient padding

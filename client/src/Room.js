@@ -64,6 +64,7 @@ const Room = props => {
       setMyTurnGuess(false);
       setWord(data.word);
       setRound(data.round);
+      setDrawTime(data.drawTime);
     });
 
     props.socket.on('start_draw', data => {
