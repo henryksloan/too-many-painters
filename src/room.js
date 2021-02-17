@@ -83,7 +83,6 @@ module.exports = class Room {
   }
 
   playerJoin(socket, username) {
-    // TODO: Should they be added to guess order? I think so
     this.players.push(socket.id);
     this.sockets[socket.id] = socket;
     if (username && typeof username == "string") {
@@ -92,6 +91,12 @@ module.exports = class Room {
       this.usernames[socket.id] = this.generateUsername();
     }
     io.to(this.id).emit('players_changed', this.getPlayerList());
+
+    // Add them to the guess order before the current guesser
+    if (this.playStarted) {
+      let guesserIndex = this.guessOrder.indexOf(this.guesser);
+      this.guessOrder.splice(guesserIndex, 0, socket.id);
+    }
   }
 
   // Returns true if the room is now empty
