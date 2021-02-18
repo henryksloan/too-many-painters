@@ -64,9 +64,14 @@ const Game = props => {
       setDrawTimer(props.drawTime);
     };
 
+    const onShowScore = data => {
+      canvasRef.current.showScore(data.word);
+    };
+
     props.socket.on('room_started', onGameStart);
     props.socket.on('round_started', onRoundStart);
     props.socket.on('start_draw', onDrawStart);
+    props.socket.on('show_score', onShowScore);
 
     props.socket.emit('game_loaded');
 
@@ -74,6 +79,7 @@ const Game = props => {
       props.socket.off('room_started', onGameStart);
       props.socket.off('round_started', onRoundStart);
       props.socket.off('start_draw', onDrawStart);
+      props.socket.off('show_score', onShowScore);
     };
   }, [props.drawTime, props.socket, roomId]);
 

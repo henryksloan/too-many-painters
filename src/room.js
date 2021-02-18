@@ -120,7 +120,16 @@ module.exports = class Room {
       this.guessOrder = this.guessOrder.filter(x => x != socketId);
     }
 
-    return this.players.length == 0;
+    let empty = this.players.length == 0;
+    if (empty) {
+      clearTimeout(this.drawTimeout);
+      clearTimeout(this.startDrawTimeout);
+      clearTimeout(this.nextRoundTimeout);
+      this.started = false;
+      this.playStarted = false;
+    }
+
+    return empty;
   }
 
   playerLoaded(socketId) {
@@ -184,7 +193,7 @@ module.exports = class Room {
     console.log("Round started");
 
     if (!this.customRounds) {
-      this.drawTime = Math.ceil(30 / this.players.length);
+      this.drawTime = Math.ceil(30 / Math.max(this.players.length, 1));
       this.minimumInk = Math.max(35, 95 - (15 * this.players.length));
       this.maximumInk = 100;
     }
@@ -207,7 +216,7 @@ module.exports = class Room {
     const context = this.canvas.getContext('2d');
     context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
-    setTimeout(() => { this.startDraw() }, 3000);
+    this.startDrawTimeout = setTimeout(() => { this.startDraw() }, 3000);
   }
 
   startDraw() {
@@ -237,21 +246,24 @@ module.exports = class Room {
   endRound() {
     console.log("Round end");
     clearTimeout(this.drawTimeout);
-    // TODO: Should send a round end signal with score info,
-    // then wait a few seconds (equal to the time it's shown on client),
-    // Then increment the current round counter, and either start the next round or do some end_game protocol
-
-    // TODO: Should probably take parameter for score, e.g. if it was preemptively ended (i.e. no score, maybe skip the popup)
-    // TODO: Maybe extra guess time?
-    if (this.round < this.nRounds) {
-      this.round += 1;
-      let nextGuesserIndex = this.guessOrder.indexOf(this.guesser) + 1;
-      this.guesser = this.guessOrder[nextGuesserIndex % this.guessOrder.length];
-      this.updatePaintOrder();
-      this.roundStart();
-    } else {
-      this.endGame();
-    }
+    let nextGuesserIndex = this.guessOrder.indexOf(this.guesser) + 1;
+    let old_painter = this.painter;
+    this.guesser = this.painter = null;
+    io.to(this.id).emit('show_score', {
+      word: this.word,
+      // TODO: etc.
+    });
+    this.nextRoundTimeout = setTimeout(() => {
+      if (this.round < this.nRounds) {
+          this.round += 1;
+          this.guesser = this.guessOrder[nextGuesserIndex % this.guessOrder.length];
+          this.painter = old_painter;
+          this.updatePaintOrder();
+          this.roundStart();
+      } else {
+        this.endGame();
+      }
+    }, 4000);
   }
 
   endGame() {

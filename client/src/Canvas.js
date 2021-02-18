@@ -64,11 +64,44 @@ const Canvas = forwardRef((props, ref) => {
         ctx.strokeStyle = "#1f2f90";
         ctx.strokeText(txt[i], x, y);
         ctx.strokeStyle = oldStrokeStyle;
-        // if (dashOffset > 0) requestAnimationFrame(loop);
         if (dashOffset > 0) workerTimers.setTimeout(loop, 16);
       })();
       ctx.fillRect(x, y - 90, 60, 150);
     },
+
+    showScore(txt) {
+      let ctx = document.querySelector("canvas").getContext("2d");
+      let old_fill = ctx.fillStyle;
+      ctx.fillStyle = "#EEEEEE7F";
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.fillStyle = old_fill;
+      ctx.strokeStyle = "#1f2f90";
+
+      ctx.font = "35px Comic Sans MS, cursive, TSCu_Comic, sans-serif"; 
+      let word_label = "The word was:";
+      let word_label_x = (ctx.canvas.width / 2) - Math.floor(
+        (ctx.measureText(word_label).width) / 2);
+      ctx.fillStyle = "#1f2f90";
+      ctx.fillText(word_label, word_label_x, 50);
+      ctx.fillStyle = old_fill;
+
+      ctx.font = "50px Comic Sans MS, cursive, TSCu_Comic, sans-serif"; 
+      let dashLen = 220, dashOffset = dashLen, speed = 11, i = 0;
+      let x = (ctx.canvas.width / 2) - Math.floor((ctx.measureText(txt).width + ctx.lineWidth) / 2);
+
+      (function loop() {
+        ctx.setLineDash([dashLen - dashOffset, dashOffset - speed]);
+        dashOffset -= speed;
+        ctx.strokeText(txt[i], x, 110);
+
+        if (dashOffset > 0) workerTimers.setTimeout(loop, 16);
+        else {
+          dashOffset = dashLen;
+          x += ctx.measureText(txt[i++]).width + ctx.lineWidth;
+          if (i < txt.length) workerTimers.setTimeout(loop, 16);
+        }
+      })();
+    }
   }));
 
   const mouseMove = (e) => {
