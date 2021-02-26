@@ -48,6 +48,8 @@ module.exports = class Room {
 
     this.round = 1; // 1-indexed
     this.nRounds = 0; // Same meaning as the frontend - nRounds=5 means round=5 is the last round
+    this.customWords = [];
+    this.customWordChance = 50;
     this.drawTime = null;
     this.minimumInk = null;
     this.maximumInk = null;
@@ -169,7 +171,8 @@ module.exports = class Room {
 
     this.customWords = String(settings.customWords || '')
       .replace(/\s/g, ' ').split(',').map((s) => s.trim()) // Extract individual phrases
-      .filter(s => s.length > 0 && s.length <= maxCustomWordLength);
+      .filter(s => s.length > 0 && s.length <= maxCustomWordLength)
+      .slice(0, 1000);
     let _customWordChance = Number(settings.customWordChance);
     if (isNaN(_customWordChance)) _customWordChance = 50;
     this.customWordChance = Math.max(0, Math.min(100, _customWordChance));
