@@ -211,7 +211,7 @@ module.exports = class Room {
 
     if (this.customWords && this.customWords.length > 0 && (Math.random() <= (this.customWordChance / 100))) {
       if (this.customWords.length == 1) {
-        this.word = this.customRounds[0];
+        this.word = this.customWords[0];
       } else {
         this.word = this.customWords.filter(w => w != this.word)[Math.floor(Math.random() * this.customWords.length)];
       }
