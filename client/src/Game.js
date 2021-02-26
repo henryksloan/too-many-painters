@@ -65,6 +65,7 @@ const Game = props => {
     };
 
     const onShowScore = data => {
+      // TODO: It seems this causes some of the painter's first strokes not to appear when tabbed away
       canvasRef.current.showScore(data.word);
     };
 
