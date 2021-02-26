@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 
 const Lobby = props => {
   const [nRounds, setNRounds] = useState(10);
+  const [customWords, setCustomWords] = useState('');
+  const [customWordChance, setCustomWordChance] = useState(50);
 
   const [customRounds, setCustomRounds] = useState(false);
   const [drawTime, setDrawTime] = useState(10);
@@ -13,10 +15,12 @@ const Lobby = props => {
   useEffect(() => {
     const settingChanged = (name, value) => {
       if (name === 'nRounds') setNRounds(value);
+      else if (name === 'customWordChance') setCustomWordChance(value);
       else if (name === 'customRounds') setCustomRounds(value);
       else if (name === 'drawTime') setDrawTime(value);
       else if (name === 'minimumInk') setMinimumInk(value);
       else if (name === 'maximumInk') setMaximumInk(value);
+      // TODO: Should this also accept customWords?
     }
 
     props.socket.on('setting_changed', settingChanged);
@@ -49,7 +53,8 @@ const Lobby = props => {
   const isLeader = props.players[0] && props.players[0][0] === props.selfId;
   function handleSubmit(e) {
     e.preventDefault();
-    if (isLeader) props.socket.emit('start_room', { nRounds, customRounds, drawTime, minimumInk, maximumInk });
+    if (isLeader) props.socket.emit('start_room',
+      { nRounds, customWords, customWordChance, customRounds, drawTime, minimumInk, maximumInk });
   }
 
   function onKeyPress(e) {
@@ -116,7 +121,15 @@ const Lobby = props => {
             <div className="setting">
               <label htmlFor="custom-words">Custom words</label>
               <textarea name="custom-words" id="custom-words" rows="6"
-                placeholder="Type a list of custom words here, separated by commas" disabled={ !isLeader }></textarea>
+                value={ customWords } onChange={ (e) => setCustomWords(e.target.value) }
+                placeholder="Type a list of custom words here, separated by commas (max word length is 16 characters)"
+                disabled={ !isLeader }></textarea>
+            </div>
+            <div className="setting">
+              <label htmlFor="custom-word-chance">Custom word chance (%)</label>
+              <input type="number" name="custom-word-chance" id="custom-word-chance" value={ customWordChance }
+                onChange={ (e) => changeNumber(e, setCustomWordChance, 'customWordChance') }
+                min="0" max="100" required disabled={ !isLeader }></input>
             </div>
 
             <div className="custom-rounds-area">

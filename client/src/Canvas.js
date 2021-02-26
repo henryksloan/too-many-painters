@@ -87,7 +87,9 @@ const Canvas = forwardRef((props, ref) => {
 
       ctx.font = "50px Comic Sans MS, cursive, TSCu_Comic, sans-serif"; 
       let dashLen = 220, dashOffset = dashLen, speed = 11, i = 0;
-      let x = (ctx.canvas.width / 2) - Math.floor((ctx.measureText(txt).width + ctx.lineWidth) / 2);
+      let x = (ctx.canvas.width / 2) - Math.floor((ctx.measureText(txt).width + ctx.lineWidth * txt.length) / 2);
+
+      if (txt.length >= 10) speed = Math.max(2, speed - 2 * (11 - txt.length));
 
       (function loop() {
         ctx.setLineDash([dashLen - dashOffset, dashOffset - speed]);

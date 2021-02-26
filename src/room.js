@@ -21,6 +21,7 @@ const words =
   "leaf", "bunk bed", "snail", "baby",
   "balloon", "bus", "cherry", "crab",
   "football", "branch", "robot"];
+maxCustomWordLength = 16;
 
 module.exports = class Room {
   constructor(id) {
@@ -166,6 +167,13 @@ module.exports = class Room {
     this.round = 1;
     this.nRounds = Math.max(1, Math.min(30, Number(settings.nRounds) || 10));
 
+    this.customWords = String(settings.customWords || '')
+      .replace(/\s/g, ' ').split(',').map((s) => s.trim()) // Extract individual phrases
+      .filter(s => s.length > 0 && s.length <= maxCustomWordLength);
+    let _customWordChance = Number(settings.customWordChance);
+    if (isNaN(_customWordChance)) _customWordChance = 50;
+    this.customWordChance = Math.max(0, Math.min(100, _customWordChance));
+
     // If kept null, these round settings are set dynamically per-round
     this.drawTime = null;
     this.minimumInk = null;
@@ -198,7 +206,15 @@ module.exports = class Room {
       this.maximumInk = 100;
     }
 
-    this.word = words[Math.floor(Math.random() * words.length)];
+    if (this.customWords && this.customWords.length > 0 && (Math.random() <= (this.customWordChance / 100))) {
+      if (this.customWords.length == 1) {
+        this.word = this.customRounds[0];
+      } else {
+        this.word = this.customWords.filter(w => w != this.word)[Math.floor(Math.random() * this.customWords.length)];
+      }
+    } else {
+      this.word = words.filter(w => w != this.word)[Math.floor(Math.random() * words.length)];
+    }
     for (let player of this.players) {
       let word = (player === this.guesser)
         ? this.word.replace(/[^\s]/g, '_')
@@ -328,14 +344,18 @@ module.exports = class Room {
   changeSetting(socket, name, value) {
     if (this.players[0] !== socket.id || this.started) return;
 
+    let num = Number(value);
+    if (isNaN(num)) num = 1;
     if (name === "nRounds" && value !== '') {
-      value = Math.max(1, Math.min(30, Number(value) || 1));
+      value = Math.max(1, Math.min(30, num));
+    } else if (name === "customWordChance" && value !== '') {
+      value = Math.max(0, Math.min(100, num));
     } else if (name === "drawTime" && value !== '') {
-      value = Math.max(1, Math.min(60, Number(value) || 1));
+      value = Math.max(1, Math.min(60, num));
     } else if (name === "minimumInk" && value !== '') {
-      value = Math.max(0, Math.min(100, Number(value) || 1));
+      value = Math.max(0, Math.min(100, num));
     } else if (name === "maximumInk" && value !== '') {
-      value = Math.max(0, Math.min(100, Number(value) || 1));
+      value = Math.max(0, Math.min(100, num));
     }
     socket.to(this.id).emit('setting_changed', name, value);
     this.settings = { ...this.settings, [name]: value };
