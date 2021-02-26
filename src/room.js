@@ -213,10 +213,12 @@ module.exports = class Room {
       if (this.customWords.length == 1) {
         this.word = this.customWords[0];
       } else {
-        this.word = this.customWords.filter(w => w != this.word)[Math.floor(Math.random() * this.customWords.length)];
+        let wordList = this.customWords.filter(w => w != this.word);
+        this.word = wordList[Math.floor(Math.random() * wordList.length)];
       }
     } else {
-      this.word = words.filter(w => w != this.word)[Math.floor(Math.random() * words.length)];
+      let wordList = words.filter(w => w != this.word)
+      this.word = wordList[Math.floor(Math.random() * wordList.length)];
     }
     for (let player of this.players) {
       let word = (player === this.guesser)
